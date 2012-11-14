@@ -4,11 +4,6 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -138,76 +133,6 @@ public class HdfsUtil {
 		}
 		return result;
 	}
-	
-	public static InputStream getInputStream(String filename)
-			throws IOException {
-
-		// HTTP
-		if (filename.startsWith("http://")) {
-
-			URL url = new URL(filename);
-			return url.openStream();
-
-			// FTP
-		} else if (filename.startsWith("ftp://")) {
-			filename = filename.replace("ftp://", "ftp://anonymous:Password@");
-
-			URL url = new URL(filename);
-			URLConnection conn = url.openConnection();
-
-			return conn.getInputStream();
-		} else if (filename.startsWith("file://")) {
-			filename = filename.replace("file://", "");
-			return new FileInputStream(filename);
-
-		} else {
-			// HDFS
-			Configuration conf = new Configuration();
-			FileSystem fs = FileSystem.get(conf);
-
-			return fs.open(new Path(filename));
-
-		}
-
-	}
-
-	public static InputStream getInputStream(String filename,
-			final String username, final String password) throws IOException {
-
-		// HTTP
-		if (filename.startsWith("http://")) {
-			Authenticator.setDefault(new Authenticator() {
-				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication(username, password
-							.toCharArray());
-				}
-			});
-
-			URL url = new URL(filename);
-			return url.openStream();
-
-			// FTP
-		} else if (filename.startsWith("ftp://")) {
-			filename = filename.replace("ftp://", "ftp://" + username + ":"
-					+ password + "@");
-
-			URL url = new URL(filename);
-			URLConnection conn = url.openConnection();
-
-			return conn.getInputStream();
-
-		} else if (filename.startsWith("file://")) {
-			filename = filename.replace("file://", "");
-			return new FileInputStream(filename);
-
-		} else {
-			// HDFS
-			Configuration conf = new Configuration();
-			FileSystem fs = FileSystem.get(conf);
-
-			return fs.open(new Path(filename));
-		}
-	}
 
 	public static void getAsZip(String zipFile, String hdfs, boolean merge,
 			Configuration configuration) {
@@ -313,6 +238,5 @@ public class HdfsUtil {
 		Configuration configuration = new Configuration();
 		putZip(filename, folder, configuration);
 	}
-
 
 }
