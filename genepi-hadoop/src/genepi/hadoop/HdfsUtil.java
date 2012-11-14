@@ -1,27 +1,64 @@
 package genepi.hadoop;
 
+import java.io.DataOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 
 public class HdfsUtil {
 
-	public static void get(String hdfs, String filename, Configuration conf)
-			throws FileNotFoundException {
+	public static void get(String hdfs, String filename,
+			Configuration configuration) throws IOException {
 
-		FileOutputStream fos = new FileOutputStream(filename);
-		try {
+		FileSystem fileSystem = FileSystem.get(configuration);
+		Path path = new Path(hdfs);
 
-			FileSystem fileSystem = FileSystem.get(conf);
-			FSDataInputStream is = fileSystem.open(new Path(hdfs));
+		if (fileSystem.isDirectory(path)) {
+
+			// merge
+			DataOutputStream fos = new DataOutputStream(new FileOutputStream(
+					filename));
+			FileStatus[] files = fileSystem.listStatus(new Path(hdfs));
+
+			for (FileStatus file : files) {
+				if (!file.isDir()) {
+
+					FSDataInputStream is = fileSystem.open(file.getPath());
+					byte[] readData = new byte[1024];
+					int i = is.read(readData);
+					long size = i;
+					while (i != -1) {
+						fos.write(readData, 0, i);
+						i = is.read(readData);
+						size += i;
+					}
+					is.close();
+
+				}
+			}
+			fos.close();
+
+		} else {
+
+			FileOutputStream fos = new FileOutputStream(filename);
+
+			FSDataInputStream is = fileSystem.open(path);
 			byte[] readData = new byte[1024];
 			int i = is.read(readData);
 			long size = i;
@@ -33,13 +70,14 @@ public class HdfsUtil {
 			is.close();
 
 			fos.close();
-			System.out.println("Export file " + hdfs + " done... (" + size
-					+ " bytes)");
 
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 
+	}
+
+	public static void get(String hdfs, String filename) throws IOException {
+		Configuration configuration = new Configuration();
+		get(hdfs, filename, configuration);
 	}
 
 	public static void put(String filename, String target, Configuration conf) {
@@ -63,10 +101,15 @@ public class HdfsUtil {
 		}
 	}
 
-	public static boolean deleteDirectory(FileSystem fileSystem,
-			String directory) {
+	public static void put(String filename, String target) {
+		Configuration configuration = new Configuration();
+		put(filename, target, configuration);
+	}
+
+	public static boolean delete(String directory, Configuration configuration) {
 		Path path = new Path(directory);
 		try {
+			FileSystem fileSystem = FileSystem.get(configuration);
 			if (fileSystem.exists(path)) {
 				fileSystem.delete(path);
 			}
@@ -76,16 +119,9 @@ public class HdfsUtil {
 		return true;
 	}
 
-	public static boolean deleteDirectory(String directory) {
-		Configuration conf = new Configuration();
-		FileSystem fileSystem;
-		try {
-			fileSystem = FileSystem.get(conf);
-			return deleteDirectory(fileSystem, directory);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return false;
+	public static boolean delete(String directory) {
+		Configuration configuration = new Configuration();
+		return delete(directory, configuration);
 	}
 
 	public static String path(String... paths) {
@@ -102,5 +138,181 @@ public class HdfsUtil {
 		}
 		return result;
 	}
+	
+	public static InputStream getInputStream(String filename)
+			throws IOException {
+
+		// HTTP
+		if (filename.startsWith("http://")) {
+
+			URL url = new URL(filename);
+			return url.openStream();
+
+			// FTP
+		} else if (filename.startsWith("ftp://")) {
+			filename = filename.replace("ftp://", "ftp://anonymous:Password@");
+
+			URL url = new URL(filename);
+			URLConnection conn = url.openConnection();
+
+			return conn.getInputStream();
+		} else if (filename.startsWith("file://")) {
+			filename = filename.replace("file://", "");
+			return new FileInputStream(filename);
+
+		} else {
+			// HDFS
+			Configuration conf = new Configuration();
+			FileSystem fs = FileSystem.get(conf);
+
+			return fs.open(new Path(filename));
+
+		}
+
+	}
+
+	public static InputStream getInputStream(String filename,
+			final String username, final String password) throws IOException {
+
+		// HTTP
+		if (filename.startsWith("http://")) {
+			Authenticator.setDefault(new Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(username, password
+							.toCharArray());
+				}
+			});
+
+			URL url = new URL(filename);
+			return url.openStream();
+
+			// FTP
+		} else if (filename.startsWith("ftp://")) {
+			filename = filename.replace("ftp://", "ftp://" + username + ":"
+					+ password + "@");
+
+			URL url = new URL(filename);
+			URLConnection conn = url.openConnection();
+
+			return conn.getInputStream();
+
+		} else if (filename.startsWith("file://")) {
+			filename = filename.replace("file://", "");
+			return new FileInputStream(filename);
+
+		} else {
+			// HDFS
+			Configuration conf = new Configuration();
+			FileSystem fs = FileSystem.get(conf);
+
+			return fs.open(new Path(filename));
+		}
+	}
+
+	public static void getAsZip(String zipFile, String hdfs, boolean merge,
+			Configuration configuration) {
+		// Create a buffer for reading the files
+		byte[] buf = new byte[1024];
+
+		try {
+			// Create the ZIP file
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
+					zipFile));
+
+			// Compress the files
+
+			FileSystem fileSystem = FileSystem.get(configuration);
+			Path pathFolder = new Path(hdfs);
+			FileStatus[] files = fileSystem.listStatus(pathFolder);
+
+			// Add ZIP entry to output stream.
+			if (merge) {
+				out.putNextEntry(new ZipEntry(pathFolder.getName()));
+			}
+
+			for (FileStatus file : files) {
+				Path path = file.getPath();
+				if (!file.isDir() && !file.getPath().getName().startsWith("_")) {
+					FSDataInputStream in = fileSystem.open(path);
+					if (!merge) {
+						out.putNextEntry(new ZipEntry(path.getName()));
+					}
+					// Transfer bytes from the file to the ZIP file
+					int len;
+					while ((len = in.read(buf)) > 0) {
+						out.write(buf, 0, len);
+					}
+
+					// Complete the entry
+					if (!merge) {
+						out.closeEntry();
+					}
+
+					in.close();
+				}
+			}
+			if (merge) {
+				out.closeEntry();
+			}
+
+			// Complete the ZIP file
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void getAsZip(String zipFile, String hdfs, boolean merge) {
+		Configuration configuration = new Configuration();
+		getAsZip(zipFile, hdfs, merge, configuration);
+	}
+
+	public static void putZip(String filename, String folder,
+			Configuration configuration) {
+		try {
+
+			FileSystem filesystem = FileSystem.get(configuration);
+
+			ZipInputStream zipinputstream = new ZipInputStream(
+					new FileInputStream(filename));
+
+			byte[] buf = new byte[1024];
+			ZipEntry zipentry = zipinputstream.getNextEntry();
+
+			while (zipentry != null) {
+				// for each entry to be extracted
+				String entryName = zipentry.getName();
+
+				if (!zipentry.isDirectory()) {
+					String target = HdfsUtil.path(folder, entryName);
+
+					FSDataOutputStream out = filesystem
+							.create(new Path(target));
+
+					int n;
+					while ((n = zipinputstream.read(buf, 0, 1024)) > -1)
+						out.write(buf, 0, n);
+					out.close();
+
+					zipinputstream.closeEntry();
+				}
+
+				zipentry = zipinputstream.getNextEntry();
+
+			}// while
+
+			zipinputstream.close();
+			System.out.println("done extracting");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void putZip(String filename, String folder) {
+		Configuration configuration = new Configuration();
+		putZip(filename, folder, configuration);
+	}
+
 
 }
