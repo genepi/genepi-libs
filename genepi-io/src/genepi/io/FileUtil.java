@@ -1,5 +1,6 @@
 package genepi.io;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -205,59 +206,23 @@ public class FileUtil {
 		}
 	}
 
-	public static InputStream getInputStream(String filename)
-			throws IOException {
-
-		// HTTP
-		if (filename.startsWith("http://")) {
-
-			URL url = new URL(filename);
-			return url.openStream();
-
-			// FTP
-		} else if (filename.startsWith("ftp://")) {
-			filename = filename.replace("ftp://", "ftp://anonymous:Password@");
-
-			URL url = new URL(filename);
-			URLConnection conn = url.openConnection();
-
-			return conn.getInputStream();
-		} else {
-			filename = filename.replace("file://", "");
-			return new FileInputStream(filename);
-
-		}
-
-	}
-
-	public static InputStream getInputStream(String filename,
-			final String username, final String password) throws IOException {
-
-		// HTTP
-		if (filename.startsWith("http://")) {
-			Authenticator.setDefault(new Authenticator() {
-				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication(username, password
-							.toCharArray());
+	public static int getLineCount(String filename) throws IOException {
+		InputStream is = new BufferedInputStream(new FileInputStream(filename));
+		try {
+			byte[] c = new byte[1024];
+			int count = 0;
+			int readChars = 0;
+			boolean empty = true;
+			while ((readChars = is.read(c)) != -1) {
+				empty = false;
+				for (int i = 0; i < readChars; ++i) {
+					if (c[i] == '\n')
+						++count;
 				}
-			});
-
-			URL url = new URL(filename);
-			return url.openStream();
-
-			// FTP
-		} else if (filename.startsWith("ftp://")) {
-			filename = filename.replace("ftp://", "ftp://" + username + ":"
-					+ password + "@");
-
-			URL url = new URL(filename);
-			URLConnection conn = url.openConnection();
-
-			return conn.getInputStream();
-
-		} else {
-			filename = filename.replace("file://", "");
-			return new FileInputStream(filename);
+			}
+			return (count == 0 && !empty) ? 1 : count;
+		} finally {
+			is.close();
 		}
 	}
 
