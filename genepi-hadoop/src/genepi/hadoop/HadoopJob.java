@@ -2,12 +2,10 @@ package genepi.hadoop;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -27,6 +25,8 @@ public abstract class HadoopJob {
 
 	private Configuration configuration;
 
+	private boolean canSet = false;
+
 	public HadoopJob(String name) {
 
 		this.name = name;
@@ -34,6 +34,8 @@ public abstract class HadoopJob {
 
 		configuration.set("mapred.child.java.opts", "-Xmx4000M");
 		configuration.set("mapred.task.timeout", "0");
+
+		canSet = true;
 
 		File file = new File(CONFIG_FILE);
 		if (file.exists()) {
@@ -56,15 +58,30 @@ public abstract class HadoopJob {
 	}
 
 	public void set(String name, int value) {
-		configuration.setInt(name, value);
+		if (canSet) {
+			configuration.setInt(name, value);
+		} else {
+			new RuntimeException("Property '" + name
+					+ "' couldn't be set. Configuration is looked.");
+		}
 	}
 
 	public void set(String name, String value) {
-		configuration.set(name, value);
+		if (canSet) {
+			configuration.set(name, value);
+		} else {
+			new RuntimeException("Property '" + name
+					+ "' couldn't be set. Configuration is looked.");
+		}
 	}
 
 	public void set(String name, boolean value) {
-		configuration.setBoolean(name, value);
+		if (canSet) {
+			configuration.setBoolean(name, value);
+		} else {
+			new RuntimeException("Property '" + name
+					+ "' couldn't be set. Configuration is looked.");
+		}
 	}
 
 	public void setInput(String input) {
@@ -102,6 +119,10 @@ public abstract class HadoopJob {
 			job = new Job(configuration, name);
 			job.setJarByClass(HadoopJob.class);
 			log.info("Creating Job " + name + "...");
+
+			// look configuration
+			canSet = false;
+
 			setupJob(job);
 
 			log.info("Running Preprocessing...");
