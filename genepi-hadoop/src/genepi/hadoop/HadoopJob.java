@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -13,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public abstract class HadoopJob {
 
-	private static final Log log = LogFactory.getLog(HadoopJob.class);
+	protected static final Log log = LogFactory.getLog(HadoopJob.class);
 
 	public static final String CONFIG_FILE = "job.config";
 
@@ -25,6 +26,8 @@ public abstract class HadoopJob {
 
 	private Configuration configuration;
 
+	private FileSystem fileSystem;
+
 	private boolean canSet = false;
 
 	public HadoopJob(String name) {
@@ -35,16 +38,36 @@ public abstract class HadoopJob {
 		configuration.set("mapred.child.java.opts", "-Xmx4000M");
 		configuration.set("mapred.task.timeout", "0");
 
-		canSet = true;
-
-		File file = new File(CONFIG_FILE);
-		if (file.exists()) {
-
-			PreferenceStore preferenceStore = new PreferenceStore(file);
-			preferenceStore.write(configuration);
-
+		try {
+			fileSystem = FileSystem.get(configuration);
+		} catch (IOException e) {
+			log.error("Creating FileSystem class failed.", e);
 		}
 
+		canSet = true;
+
+		readConfigFile();
+
+	}
+
+	protected void readConfigFile() {
+		File file = new File(CONFIG_FILE);
+		if (file.exists()) {
+			log.info("Loading distributed configuration file " + CONFIG_FILE
+					+ "...");
+			PreferenceStore preferenceStore = new PreferenceStore(file);
+			preferenceStore.write(configuration);
+			for (Object key : preferenceStore.getKeys()) {
+				log.info("  " + key + ": "
+						+ preferenceStore.getString(key.toString()));
+			}
+
+		} else {
+
+			log.info("No distributed configuration file (" + CONFIG_FILE
+					+ ") available.");
+
+		}
 	}
 
 	protected void setupDistributedCache(CacheStore cache) {
@@ -55,6 +78,10 @@ public abstract class HadoopJob {
 
 	public Configuration getConfiguration() {
 		return configuration;
+	}
+
+	public FileSystem getFileSystem() {
+		return fileSystem;
 	}
 
 	public void set(String name, int value) {
@@ -114,6 +141,9 @@ public abstract class HadoopJob {
 		CacheStore cacheStore = new CacheStore(configuration);
 		setupDistributedCache(cacheStore);
 
+		log.info("Running Preprocessing...");
+		before();
+
 		Job job = null;
 		try {
 			job = new Job(configuration, name);
@@ -125,16 +155,13 @@ public abstract class HadoopJob {
 
 			setupJob(job);
 
-			log.info("Running Preprocessing...");
-			before();
-
 			try {
-				log.info("Input Path: " + input);
+				log.info("  Input Path: " + input);
 				FileInputFormat.addInputPath(job, new Path(input));
 			} catch (IOException e) {
-				log.error("Errors setting Input Input Path " + input, e);
+				log.error("  Errors setting Input Input Path " + input, e);
 			}
-			log.info("Output Path: " + output);
+			log.info("  Output Path: " + output);
 			FileOutputFormat.setOutputPath(job, new Path(output));
 
 			log.info("Running Job...");
