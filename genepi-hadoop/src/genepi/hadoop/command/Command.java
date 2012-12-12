@@ -3,10 +3,14 @@ package genepi.hadoop.command;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
-public class Command {
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-	private String cmd;
+public class Command implements ICommand{
+	
+	protected String cmd;
 
 	private String[] params;
 
@@ -19,6 +23,10 @@ public class Command {
 	private StringBuffer stout = new StringBuffer();
 
 	private String stdoutFileName = null;
+
+	private List<String> inputs = new Vector<String>();
+
+	private List<String> outputs = new Vector<String>();
 
 	public Command(String cmd, String... params) {
 		this.cmd = cmd;
@@ -134,6 +142,44 @@ public class Command {
 
 	public String getStdOut() {
 		return stout.toString();
+	}
+
+	public void addInput(String input) {
+		inputs.add(input);
+	}
+
+	public void addOutput(String output) {
+		outputs.add(output);
+	}
+
+	public List<String> getInputs() {
+		return inputs;
+	}
+
+	public List<String> getOutputs() {
+		return outputs;
+	}
+
+	private boolean isNoFile(String param) {
+		return !inputs.contains(param) && !outputs.contains(param);
+	}
+
+	public String getSignature() {
+
+		String fullCommand = cmd;
+		for (String param : params) {
+			if (isNoFile(param)) {
+				fullCommand += param;
+			}
+		}
+
+		return org.apache.commons.codec.digest.DigestUtils.md5Hex(fullCommand);
+
+	}
+	
+	@Override
+	public String getName() {
+		return cmd;
 	}
 
 }

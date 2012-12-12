@@ -1,5 +1,7 @@
 package genepi.hadoop;
 
+import genepi.hadoop.cache.CommandCache;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -135,6 +137,13 @@ public abstract class HadoopJob {
 
 	}
 
+	public void cleanupJob(Job job) {
+
+		CommandCache.getInstance().load(CommandCache.DIRECTORY);
+		CommandCache.getInstance().update(job);
+
+	}
+
 	public boolean execute() {
 
 		log.info("Setting up Distributed Cache...");
@@ -173,14 +182,17 @@ public abstract class HadoopJob {
 				log.info("Execution successful.");
 				log.info("Running Postprocessing...");
 				after();
+				cleanupJob(job);
 				return true;
 			} else {
 				log.info("Execution failed.");
+				cleanupJob(job);
 				return false;
 			}
 
 		} catch (Exception e) {
 			log.error("Execution failed.", e);
+			cleanupJob(job);
 			return false;
 		}
 
