@@ -1,13 +1,14 @@
 package genepi.hadoop.command;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-public class Command implements ICommand {
+public class PipedCommand {
 
 	protected String cmd;
 
@@ -27,12 +28,18 @@ public class Command implements ICommand {
 
 	private List<String> outputs = new Vector<String>();
 
-	public Command(String cmd, String... params) {
+	private PipedCommand inputCommand = null;
+
+	private PipedCommand outputCommand = null;
+
+	private Process process;
+
+	public PipedCommand(String cmd, String... params) {
 		this.cmd = cmd;
 		this.params = params;
 	}
 
-	public Command(String cmd) {
+	public PipedCommand(String cmd) {
 		this.cmd = cmd;
 	}
 
@@ -49,9 +56,23 @@ public class Command implements ICommand {
 
 	public void saveStdOut(String filename) {
 		this.stdoutFileName = filename;
+		silent = true;
 	}
 
-	public int execute() {
+	protected void readFrom(PipedCommand command) {
+		inputCommand = command;
+		inputCommand.writeTo(this);
+	}
+
+	protected void writeTo(PipedCommand command) {
+		outputCommand = command;
+	}
+
+	protected int execute() {
+
+		if (inputCommand != null) {
+			inputCommand.execute();
+		}
 
 		List<String> command = new ArrayList<String>();
 
@@ -70,31 +91,47 @@ public class Command implements ICommand {
 				builder.directory(new File(directory));
 			}
 
-			Process process = builder.start();
-			CommandStreamHandler handler = new CommandStreamHandler(
-					process.getInputStream(), stdoutFileName);
-			handler.setSilent(silent);
-			Thread inputStreamHandler = new Thread(handler);
+			process = builder.start();
+
+			Thread inputStreamHandler = null;
+
+			if (outputCommand == null) {
+				CommandStreamHandler handler = new CommandStreamHandler(
+						process.getInputStream(), stdoutFileName);
+				handler.setSilent(silent);
+				inputStreamHandler = new Thread(handler);
+				inputStreamHandler.start();
+			}
+
+			if (inputCommand != null) {
+
+				CommandStreamPipeHandler handler = new CommandStreamPipeHandler(
+						inputCommand.getOutputStream(),
+						process.getOutputStream());
+				Thread pipeHandler = new Thread(handler);
+				pipeHandler.start();
+
+			}
 
 			Thread errorStreamHandler = new Thread(new CommandStreamHandler(
 					process.getErrorStream()));
 
-			inputStreamHandler.start();
 			errorStreamHandler.start();
 
-			process.waitFor();
+			if (outputCommand == null) {
+				process.waitFor();
 
-			inputStreamHandler.interrupt();
-			errorStreamHandler.interrupt();
-			inputStreamHandler.join();
-			errorStreamHandler.join();
+				inputStreamHandler.interrupt();
+				errorStreamHandler.interrupt();
+				inputStreamHandler.join();
+				errorStreamHandler.join();
 
-			if (process.exitValue() != 0) {
-				return process.exitValue();
-			} else {
-				process.destroy();
+				if (process.exitValue() != 0) {
+					return process.exitValue();
+				} else {
+					process.destroy();
+				}
 			}
-
 			if (deleteInput) {
 				new File(cmd).delete();
 			}
@@ -104,6 +141,10 @@ public class Command implements ICommand {
 			e.printStackTrace();
 			return -1;
 		}
+	}
+
+	public InputStream getOutputStream() {
+		return process.getInputStream();
 	}
 
 	public boolean isSilent() {
@@ -178,7 +219,6 @@ public class Command implements ICommand {
 
 	}
 
-	@Override
 	public String getName() {
 		return cmd;
 	}

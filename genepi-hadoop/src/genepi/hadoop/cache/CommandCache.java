@@ -30,7 +30,7 @@ public class CommandCache {
 
 	private List<CommandCacheEntry> updates;
 
-	public static String DIRECTORY = "cloudgene-cache";
+	public static String DIRECTORY = "/home/lukas/hdfs/cache";
 
 	public static CommandCache instance = null;
 
@@ -149,7 +149,7 @@ public class CommandCache {
 		// put output files into hdfs
 		for (int i = 0; i < command.getOutputs().size(); i++) {
 			String outputFile = command.getOutputs().get(i);
-			String name = CommandCacheEntry.getMd5Heash(outputFile);
+			String name = CommandCacheEntry.getMd5Hex(outputFile);
 			String target = HdfsUtil.path(cacheDirectory, "data", name);
 			HdfsUtil.put(outputFile, target);
 			entry.getOutputFiles()[i] = target;

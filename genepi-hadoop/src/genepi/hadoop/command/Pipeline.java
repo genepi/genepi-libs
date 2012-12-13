@@ -3,49 +3,67 @@ package genepi.hadoop.command;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class Pipeline implements ICommand {
 
-	private List<ICommand> commands;
-	
+	protected static final Log log = LogFactory.getLog(Pipeline.class);
+
+	private List<PipedCommand> commands;
+
 	private String name;
 
+	private List<String> inputs = new Vector<String>();
+	
+	private List<String> outputs = new Vector<String>();
+	
 	public Pipeline(String name) {
-		commands = new Vector<ICommand>();
+		commands = new Vector<PipedCommand>();
 		this.name = name;
 	}
-	
-	public void add(ICommand command){
+
+	public void add(PipedCommand command) {
+		if (!commands.isEmpty()) {
+			PipedCommand prevStep = commands.get(commands.size() - 1);
+			command.readFrom(prevStep);
+		}
+		inputs.addAll(command.getInputs());
+		outputs.addAll(command.getOutputs());
 		commands.add(command);
 	}
 
 	@Override
 	public List<String> getInputs() {
-		return commands.get(0).getInputs();
+		return inputs;
 	}
 
 	@Override
 	public List<String> getOutputs() {
-		return commands.get(commands.size() - 1).getOutputs();
+		return outputs;
 	}
 
 	@Override
 	public String getSignature() {
 		String signature = "";
-		for (ICommand command : commands) {
+		for (PipedCommand command : commands) {
 			signature += command.getSignature();
 		}
-		return org.apache.commons.codec.digest.DigestUtils.md5Hex(signature);
+		return DigestUtils.md5Hex(signature);
 	}
 
 	@Override
 	public int execute() {
-		for (ICommand command : commands) {
-			int result = command.execute();
-			if (result != 0) {
-				return result;
-			}
+		log.info("Running pipeline " + name + "...");
+		PipedCommand lastStep = commands.get(commands.size() - 1);
+		int result = lastStep.execute();
+		if (result == 0) {
+			log.info("Running pipeline " + name + " successful.");
+		} else {
+			log.info("Running pipeline " + name + " failed.");
 		}
-		return 0;
+		return result;
 	}
 
 	@Override

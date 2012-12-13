@@ -1,11 +1,10 @@
 package genepi.hadoop.cache;
 
+import genepi.hadoop.command.ICommand;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-
-import genepi.hadoop.command.Command;
-import genepi.hadoop.command.ICommand;
 
 public class CommandCacheEntry {
 
@@ -23,7 +22,7 @@ public class CommandCacheEntry {
 		signature = command.getSignature();
 		inputFiles = new String[command.getInputs().size()];
 		for (int i = 0; i < command.getInputs().size(); i++) {
-			inputFiles[i] = getMd5Heash(command.getInputs().get(i));
+			inputFiles[i] = getMd5Hex(command.getInputs().get(i));
 		}
 		outputFiles = new String[command.getOutputs().size()];
 	}
@@ -58,7 +57,7 @@ public class CommandCacheEntry {
 		return command;
 	}
 
-	public static String getMd5Heash(String filename) {
+	public static String getMd5Hex(String filename) {
 		try {
 			FileInputStream fis = new FileInputStream(new File(filename));
 			String md5 = org.apache.commons.codec.digest.DigestUtils
@@ -101,8 +100,8 @@ public class CommandCacheEntry {
 		}
 		return result;
 	}
-	
-	public String getName(){
+
+	public String getName() {
 		return command.getName();
 	}
 
