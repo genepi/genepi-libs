@@ -1,9 +1,10 @@
 package genepi.hadoop.cache;
 
 import genepi.hadoop.HdfsUtil;
-import genepi.hadoop.command.ICommand;
+import genepi.hadoop.command.CachedCommand;
+import genepi.hadoop.command.CachedCommandGroup;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.util.Vector;
 
@@ -21,36 +22,34 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.LineReader;
 
-public class CommandCache {
+public class FolderCache {
 
-	protected static final Log log = LogFactory.getLog(CommandCache.class);
+	protected static final Log log = LogFactory.getLog(FolderCache.class);
 
 	private String cacheDirectory;
 
-	private List<CommandCacheEntry> entries;
+	private List<FolderCacheEntry> entries;
 
-	private List<CommandCacheEntry> updates;
+	private List<FolderCacheEntry> updates;
 
-	public static String DIRECTORY = "cloudgene-cache";
+	public static FolderCache instance = null;
 
-	public static CommandCache instance = null;
-
-	public static CommandCache getInstance() {
+	public static FolderCache getInstance() {
 		if (instance == null) {
-			instance = new CommandCache();
+			instance = new FolderCache();
 		}
 		return instance;
 	}
 
-	private CommandCache() {
-		entries = new Vector<CommandCacheEntry>();
-		updates = new Vector<CommandCacheEntry>();
+	private FolderCache() {
+		entries = new Vector<FolderCacheEntry>();
+		updates = new Vector<FolderCacheEntry>();
 	}
 
 	public void load(String cacheDirectory) {
 		this.cacheDirectory = cacheDirectory;
-		entries = new Vector<CommandCacheEntry>();
-		updates = new Vector<CommandCacheEntry>();
+		entries = new Vector<FolderCacheEntry>();
+		updates = new Vector<FolderCacheEntry>();
 
 		Configuration conf = new Configuration();
 		try {
@@ -67,7 +66,7 @@ public class CommandCache {
 				LineReader reader = new LineReader(is);
 				while (reader.readLine(line, 500) > 0) {
 					if (line.toString().length() > 0) {
-						CommandCacheEntry entry = CommandCacheEntry.parse(line
+						FolderCacheEntry entry = FolderCacheEntry.parse(line
 								.toString());
 						entries.add(entry);
 					}
@@ -86,75 +85,35 @@ public class CommandCache {
 
 	}
 
-	public boolean isCached(ICommand command) {
-		CommandCacheEntry entry = new CommandCacheEntry(command);
-		return isCached(entry);
-	}
-
-	protected boolean isCached(CommandCacheEntry entry) {
-		for (CommandCacheEntry cacheEntry : entries) {
-			if (cacheEntry.isEqual(entry)) {
-				if (entry.getCommand() != null) {
-					log.info(entry.getName() + " is cached.");
-				}
-				return true;
+	public String getCachedDirectory(String signature) {
+		for (FolderCacheEntry cacheEntry : entries) {
+			if (cacheEntry.getSignature().equals(signature)) {
+				log.info(signature + " is cached.");
+				return cacheEntry.getFolder();
 			}
 		}
-		if (entry.getCommand() != null) {
-			log.info(entry.getName() + " is not cached.");
-		}
-		return false;
-	}
-
-	public boolean checkOut(ICommand command) {
-		CommandCacheEntry entry = new CommandCacheEntry(command);
-		for (CommandCacheEntry cacheEntry : entries) {
-			if (cacheEntry.isEqual(entry)) {
-				// read files from hdfs cache
-				log.info("Loading " + cacheEntry.getOutputFiles().length
-						+ " file/s from cache...");
-
-				for (int i = 0; i < cacheEntry.getOutputFiles().length; i++) {
-					try {
-						HdfsUtil.get(cacheEntry.getOutputFiles()[i], command
-								.getOutputs().get(i));
-					} catch (IOException e) {
-						e.printStackTrace();
-						return false;
-					}
-				}
-
-			}
-		}
-		return true;
+		log.info(signature + " is not cached.");
+		return null;
 
 	}
 
-	public void cache(ICommand command) {
+	public void cacheFile(String signature, String filename) {
 
-		CommandCacheEntry entry = new CommandCacheEntry(command);
-		cache(entry);
-	}
+		String folder = HdfsUtil.path(cacheDirectory, "data", signature);
 
-	protected void cache(CommandCacheEntry entry) {
+		FolderCacheEntry entry = new FolderCacheEntry(signature);
+		entry.setFolder(folder);
 
-		ICommand command = entry.getCommand();
-
-		log.info("Put " + entry.getName() + " into cache.");
+		log.info("Put " + signature + " into cache.");
 		entries.add(entry);
 		updates.add(entry);
 
-		log.info("Storing " + command.getOutputs().size()
-				+ " file/s into cache...");
+		log.info("Storing " + filename + " file into cache...");
 
-		// put output files into hdfs
-		for (int i = 0; i < command.getOutputs().size(); i++) {
-			String outputFile = command.getOutputs().get(i);
-			String name = CommandCacheEntry.getMd5Hex(outputFile);
-			String target = HdfsUtil.path(cacheDirectory, "data", name);
-			HdfsUtil.put(outputFile, target);
-			entry.getOutputFiles()[i] = target;
-		}
+		String name =  CommandCacheEntry.getMd5Hex(filename);
+		String target = HdfsUtil.path(folder, name);
+		HdfsUtil.put(filename, target);
+
 	}
 
 	public void save(Mapper.Context context) {
@@ -190,7 +149,7 @@ public class CommandCache {
 				FileSystem fileSystem = FileSystem.get(conf);
 				FSDataOutputStream out = fileSystem.create(new Path(target));
 
-				for (CommandCacheEntry entry : updates) {
+				for (FolderCacheEntry entry : updates) {
 					out.write(entry.toString().getBytes());
 					out.write('\n');
 				}
@@ -222,7 +181,7 @@ public class CommandCache {
 				FileSystem fileSystem = FileSystem.get(conf);
 				FSDataOutputStream out = fileSystem.create(new Path(target));
 
-				for (CommandCacheEntry entry : entries) {
+				for (FolderCacheEntry entry : entries) {
 					out.write(entry.toString().getBytes());
 					out.write('\n');
 				}
@@ -263,9 +222,9 @@ public class CommandCache {
 					while (reader.readLine(line, 500) > 0) {
 						if (line.toString().length() > 0) {
 
-							CommandCacheEntry entry = CommandCacheEntry
+							FolderCacheEntry entry = FolderCacheEntry
 									.parse(line.toString());
-							if (!isCached(entry)) {
+							if (getCachedDirectory(entry.getSignature()) == null) {
 								entries.add(entry);
 								updates.add(entry);
 							}

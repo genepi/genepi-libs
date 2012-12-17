@@ -10,6 +10,15 @@ public class PipeTest {
 	 */
 	public static void main(String[] args) {
 
+		System.out.println("-> sleep <-");
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		System.out.println("-> start <-");
 		
 		String bamFile = "NA12272.mapped.ILLUMINA.bwa.CEU.low_coverage.20101123.chrom20.20000001.20300000.bam";
@@ -33,8 +42,15 @@ public class PipeTest {
 
 		pipeline.execute();
 
-		System.out.println("-> end <-");
+		System.out.println("-> sleep <-");		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
+		System.out.println("-> end <-");		
 	}
 
 }
