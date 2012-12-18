@@ -1,4 +1,6 @@
-#Hadoop-Genepi Library
+# Genepi-Hadoop Library
+
+Genepi-Hadoop Library contains several utility classes for Apache Hadoop.
 
 ## Jobs
 
