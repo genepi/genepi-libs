@@ -1,10 +1,54 @@
-# Cache
+#Hadoop-Genepi Library
+
+## Commands
+
+### Simple Command
+
+	Command command = new Command("/usr/bin/ls");
+	command.setParams(param1, param2, param3, ...);
+	command.saveStdOut("command.out"); //save command output (optional)
+	command.setSilent(true); //no output on stdout (optional)
+	command.execute();
+
+### Group of Commands
+
+	Command command1 = new Command("/usr/bin/ls");
+	command1.setParams(param1, param2, param3, ...);
+
+	Command command2 = new Command("/usr/bin/ls");
+	command2.setParams(param1, param2, param3, ...);
+	
+	CommandGroup group = new CommandGroup("my group");
+	group.add(command1);
+	group.add(command2);
+	group.execute();
 
 
-## FolderCache Example:
+### Command Pipeline
+
+Command 2 reads stdout from command 1:
+
+	PipedCommand command1 = new PipedCommand("/usr/bin/ls");
+	command1.setParams(foldername);
+
+	PipedCommand command2 = new Command("/usr/bin/grep");
+	command2.setParams(filename);
+	
+	Pipeline pipeline = new Pipeline("my pipeline");
+	pipeline.add(command1);
+	pipeline.add(command2);
+	pipeline.execute();
 
 
-### HadoopJob:
+## Cache
+
+### Caching in Commands
+
+
+### Caching files and folders:
+
+
+#### HadoopJob:
 
 	@Override
 	public void setupJob(Job job) {
@@ -19,7 +63,7 @@
 	}
 
 
-### Mapper or Reducer:
+#### Mapper or Reducer:
 
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
@@ -41,7 +85,7 @@
 	}
 
 
-### Using cached files:
+#### Using cached files:
 
 		FolderCache.getInstance().load(CACHE);
 		String directory = FolderCache.getInstance().getCachedDirectory(
