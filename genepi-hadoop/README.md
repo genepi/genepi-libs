@@ -6,7 +6,7 @@
 
 ### HadoopJob:
 
-  @Override
+	@Override
 	public void setupJob(Job job) {
 		//load cache index file (CACHE is a hdfs folder)
 		FolderCache.getInstance().load(CACHE);
