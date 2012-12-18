@@ -139,9 +139,6 @@ public abstract class HadoopJob {
 
 	public void cleanupJob(Job job) {
 
-		CommandCache.getInstance().load(CommandCache.DIRECTORY);
-		CommandCache.getInstance().update(job);
-
 	}
 
 	public boolean execute() {

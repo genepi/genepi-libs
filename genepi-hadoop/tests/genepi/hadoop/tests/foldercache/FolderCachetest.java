@@ -19,6 +19,8 @@ public class FolderCachetest extends HadoopJob {
 	@Override
 	public void setupJob(Job job) {
 
+		FolderCache.getInstance().load(CACHE_FOLDER);
+		
 		job.setInputFormatClass(TextInputFormat.class);
 
 		job.setMapperClass(FolderCacheMapper.class);
@@ -33,8 +35,7 @@ public class FolderCachetest extends HadoopJob {
 
 	@Override
 	public void cleanupJob(Job job) {
-		FolderCache.getInstance().load(CACHE_FOLDER);
-		FolderCache.getInstance().update(job);
+		FolderCache.getInstance().updateAndSave(job);
 	}
 
 	public static void main(String[] args) {

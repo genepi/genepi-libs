@@ -1,10 +1,7 @@
 package genepi.hadoop.cache;
 
 import genepi.hadoop.HdfsUtil;
-import genepi.hadoop.command.CachedCommand;
-import genepi.hadoop.command.CachedCommandGroup;
 
-import java.io.File;
 import java.util.List;
 import java.util.Vector;
 
@@ -162,7 +159,7 @@ public class FolderCache {
 
 		} else {
 
-			log.info("No changes on cache.");
+			log.info("No change in cache index file.");
 
 		}
 
@@ -194,13 +191,13 @@ public class FolderCache {
 
 		} else {
 
-			log.info("No changes on cache.");
+			log.info("No change in cache index file.");
 
 		}
 
 	}
 
-	public void update(Job job) {
+	public void updateAndSave(Job job) {
 
 		log.info("Update cache...");
 
@@ -242,6 +239,12 @@ public class FolderCache {
 		String target = HdfsUtil.path(cacheDirectory, "index");
 		saveAll(target);
 
+	}
+	
+	public void clear(String directory) {
+		log.info("Clear cache...");
+		HdfsUtil.delete(directory);
+		log.info("Cache is empty.");
 	}
 
 }

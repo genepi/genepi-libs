@@ -31,8 +31,6 @@ public class CommandCache {
 
 	private List<CommandCacheEntry> updates;
 
-	public static String DIRECTORY = "cloudgene-cache";
-
 	public static CommandCache instance = null;
 
 	public static CommandCache getInstance() {
@@ -241,7 +239,7 @@ public class CommandCache {
 
 	}
 
-	public void update(Job job) {
+	public void updateAndSave(Job job) {
 
 		log.info("Update cache...");
 
@@ -283,6 +281,12 @@ public class CommandCache {
 		String target = HdfsUtil.path(cacheDirectory, "index");
 		saveAll(target);
 
+	}
+
+	public void clear(String directory) {
+		log.info("Clear cache...");
+		HdfsUtil.delete(directory);
+		log.info("Cache is empty.");
 	}
 
 }
