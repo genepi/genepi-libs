@@ -63,7 +63,7 @@ Genepi-Hadoop Library contains several utility classes for Apache Hadoop.
 
 ### Job Configuration File
 
-The job class loads all properties which are set in the file "job.config" and distribute them using the PreferenceStore class.
+The job class loads all properties which are set in the file "job.config" and distributes them using the PreferenceStore class.
 
 job.config:
 
