@@ -96,6 +96,13 @@ public class FolderCache {
 
 	public void cacheFile(String signature, String filename) {
 
+		String name =  CommandCacheEntry.getMd5Hex(filename);
+		cacheFile(signature, filename, name);
+
+	}
+	
+	public void cacheFile(String signature, String filename, String name) {
+
 		String folder = HdfsUtil.path(cacheDirectory, "data", signature);
 
 		FolderCacheEntry entry = new FolderCacheEntry(signature);
@@ -107,7 +114,6 @@ public class FolderCache {
 
 		log.info("Storing " + filename + " file into cache...");
 
-		String name =  CommandCacheEntry.getMd5Hex(filename);
 		String target = HdfsUtil.path(folder, name);
 		HdfsUtil.put(filename, target);
 
