@@ -1,5 +1,16 @@
 #Hadoop-Genepi Library
 
+## Jobs
+
+### Simple Hadoop Job
+
+### Job Configuration File
+
+### Distributed HashMap
+
+
+## Hdfs Utilities
+
 ## Commands
 
 ### Simple Command
@@ -38,6 +49,9 @@ Command 2 reads stdout from command 1:
 	pipeline.add(command1);
 	pipeline.add(command2);
 	pipeline.execute();
+
+
+### R-Scripts
 
 
 ## Cache
