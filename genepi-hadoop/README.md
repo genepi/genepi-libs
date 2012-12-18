@@ -4,7 +4,7 @@ Genepi-Hadoop Library contains several utility classes for Apache Hadoop.
 
 ## Jobs
 
-### Simple Hadoop Job Template
+### Hadoop Job Template
 
 	public class MyJob extends HadoopJob {
 	
@@ -63,7 +63,7 @@ Genepi-Hadoop Library contains several utility classes for Apache Hadoop.
 
 ### Job Configuration File
 
-The job class loads all properties which are set in the file "job.config" and distribute them using the PreferenceStore class.
+The job class loads all properties which are set in the file "job.config" and distributes them using the PreferenceStore class.
 
 job.config:
 
@@ -140,7 +140,7 @@ Command 2 reads stdout from command 1:
 ### Caching files and folders:
 
 
-#### HadoopJob:
+#### Using the cache in your HadoopJob
 
 	@Override
 	public void setupJob(Job job) {
@@ -155,7 +155,7 @@ Command 2 reads stdout from command 1:
 	}
 
 
-#### Mapper or Reducer:
+#### Caching in files in your Mapper/Reducer
 
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
@@ -177,7 +177,7 @@ Command 2 reads stdout from command 1:
 	}
 
 
-#### Using cached files:
+#### Using cached files
 
 		FolderCache.getInstance().load(CACHE);
 		String directory = FolderCache.getInstance().getCachedDirectory(
