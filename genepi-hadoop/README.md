@@ -4,9 +4,85 @@ Genepi-Hadoop Library contains several utility classes for Apache Hadoop.
 
 ## Jobs
 
-### Simple Hadoop Job
+### Simple Hadoop Job Template
+
+	public class MyJob extends HadoopJob {
+	
+		public MyJob() {
+	
+			super("my job");
+			//configuration:
+			getConfiguration().set("key", "value");
+		}
+	
+		@Override
+		public void setupJob(Job job) {
+	
+			job.setInputFormatClass(TextInputFormat.class);
+	
+			job.setMapperClass(MyMapper.class);
+			job.setMapOutputKeyClass(Text.class);
+			job.setMapOutputValueClass(Text.class);
+	
+			job.setReducerClass(MyReducer.class);
+			job.setOutputKeyClass(Text.class);
+			job.setOutputValueClass(Text.class);
+		}
+	
+	    //optional:
+
+		@Override
+		public void cleanupJob(Job job) {
+	
+		}
+	
+		@Override
+		public void before() {
+		
+		}
+	
+		@Override
+		public void after() {
+		
+		}
+	
+	}
+
+### Job Execution
+
+	MyJob job = new MyJob();
+	job.setInput(hdfsInput);
+	job.setOutput(hdfsOutput);
+
+	boolean result = job.execute();
+
+	if (!result){
+		//error
+		System.exit(-1);
+	}
 
 ### Job Configuration File
+
+The job class loads all properties which are set in the file "job.config" and distribute them using the PreferenceStore class.
+
+job.config:
+
+	property1=my property
+	property2=my property2
+	property3=my property3
+
+Accessing a property in your Mapper class:
+
+	@Override
+	protected void setup(Context context) throws IOException,
+			InterruptedException {
+
+		PreferenceStore store = new PreferenceStore(context.getConfiguration());
+		String property1 = store.getString("property1");
+		
+	}
+
+
 
 ### Distributed HashMap
 
