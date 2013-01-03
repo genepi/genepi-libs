@@ -185,10 +185,10 @@ Command 2 reads stdout from command 1:
 
 		if (directory == null) {
 
-			//files are cached in directory (hdfs path!)
+			//files are not cached
 
 		} else {
 
-			//files are not cached
+			//files are cached in directory (hdfs path!)
 
 		}
