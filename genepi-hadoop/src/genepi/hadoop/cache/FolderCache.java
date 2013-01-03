@@ -31,6 +31,8 @@ public class FolderCache {
 
 	public static FolderCache instance = null;
 
+	private boolean loaded = false;
+
 	public static FolderCache getInstance() {
 		if (instance == null) {
 			instance = new FolderCache();
@@ -70,52 +72,76 @@ public class FolderCache {
 				}
 				reader.close();
 
+				loaded = true;
+				
 			} else {
 
 				log.info("Cache index file " + indexFile + " not present.");
 
+				loaded = true;
+
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+
+			log.error("Loading Cache index file failed.", e);
+
+			loaded = false;
 		}
 
 	}
 
 	public String getCachedDirectory(String signature) {
-		for (FolderCacheEntry cacheEntry : entries) {
-			if (cacheEntry.getSignature().equals(signature)) {
-				log.info(signature + " is cached.");
-				return cacheEntry.getFolder();
+
+		if (loaded) {
+
+			for (FolderCacheEntry cacheEntry : entries) {
+				if (cacheEntry.getSignature().equals(signature)) {
+					log.info(signature + " is cached.");
+					return cacheEntry.getFolder();
+				}
 			}
+			log.info(signature + " is not cached.");
+			return null;
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
 		}
-		log.info(signature + " is not cached.");
-		return null;
 
 	}
 
 	public void cacheFile(String signature, String filename) {
 
-		String name =  CommandCacheEntry.getMd5Hex(filename);
+		String name = CommandCacheEntry.getMd5Hex(filename);
 		cacheFile(signature, filename, name);
 
 	}
-	
+
 	public void cacheFile(String signature, String filename, String name) {
 
-		String folder = HdfsUtil.path(cacheDirectory, "data", signature);
+		if (loaded) {
 
-		FolderCacheEntry entry = new FolderCacheEntry(signature);
-		entry.setFolder(folder);
+			String folder = HdfsUtil.path(cacheDirectory, "data", signature);
 
-		log.info("Put " + signature + " into cache.");
-		entries.add(entry);
-		updates.add(entry);
+			FolderCacheEntry entry = new FolderCacheEntry(signature);
+			entry.setFolder(folder);
 
-		log.info("Storing " + filename + " file into cache...");
+			log.info("Put " + signature + " into cache.");
+			entries.add(entry);
+			updates.add(entry);
 
-		String target = HdfsUtil.path(folder, name);
-		HdfsUtil.put(filename, target);
+			log.info("Storing " + filename + " file into cache...");
+
+			String target = HdfsUtil.path(folder, name);
+			HdfsUtil.put(filename, target);
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
+		}
 
 	}
 
@@ -141,31 +167,40 @@ public class FolderCache {
 
 	public void save(String target) {
 
-		if (!updates.isEmpty()) {
+		if (loaded) {
 
-			log.info("Write " + updates.size()
-					+ " changes into cache index file...");
+			if (!updates.isEmpty()) {
 
-			Configuration conf = new Configuration();
-			try {
+				log.info("Write " + updates.size()
+						+ " changes into cache index file...");
 
-				FileSystem fileSystem = FileSystem.get(conf);
-				FSDataOutputStream out = fileSystem.create(new Path(target));
+				Configuration conf = new Configuration();
+				try {
 
-				for (FolderCacheEntry entry : updates) {
-					out.write(entry.toString().getBytes());
-					out.write('\n');
+					FileSystem fileSystem = FileSystem.get(conf);
+					FSDataOutputStream out = fileSystem
+							.create(new Path(target));
+
+					for (FolderCacheEntry entry : updates) {
+						out.write(entry.toString().getBytes());
+						out.write('\n');
+					}
+
+					out.close();
+
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
-				out.close();
+			} else {
 
-			} catch (Exception e) {
-				e.printStackTrace();
+				log.info("No change in cache index file.");
+
 			}
 
 		} else {
 
-			log.info("No change in cache index file.");
+			throw new RuntimeException("Cache is not loaded yet.");
 
 		}
 
@@ -173,31 +208,40 @@ public class FolderCache {
 
 	protected void saveAll(String target) {
 
-		if (!updates.isEmpty()) {
+		if (loaded) {
 
-			log.info("Write " + updates.size()
-					+ " changes into cache index file...");
+			if (!updates.isEmpty()) {
 
-			Configuration conf = new Configuration();
-			try {
+				log.info("Write " + updates.size()
+						+ " changes into cache index file...");
 
-				FileSystem fileSystem = FileSystem.get(conf);
-				FSDataOutputStream out = fileSystem.create(new Path(target));
+				Configuration conf = new Configuration();
+				try {
 
-				for (FolderCacheEntry entry : entries) {
-					out.write(entry.toString().getBytes());
-					out.write('\n');
+					FileSystem fileSystem = FileSystem.get(conf);
+					FSDataOutputStream out = fileSystem
+							.create(new Path(target));
+
+					for (FolderCacheEntry entry : entries) {
+						out.write(entry.toString().getBytes());
+						out.write('\n');
+					}
+
+					out.close();
+
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
-				out.close();
+			} else {
 
-			} catch (Exception e) {
-				e.printStackTrace();
+				log.info("No change in cache index file.");
+
 			}
 
 		} else {
 
-			log.info("No change in cache index file.");
+			throw new RuntimeException("Cache is not loaded yet.");
 
 		}
 
@@ -207,50 +251,67 @@ public class FolderCache {
 
 		log.info("Update cache...");
 
-		String name = job.getJobID().toString();
-		String directory = HdfsUtil.path(cacheDirectory, "meta", name);
+		if (loaded) {
 
-		Configuration conf = new Configuration();
-		try {
-			FileSystem fileSystem = FileSystem.get(conf);
-			Path splitDirectory = new Path(directory);
+			String name = job.getJobID().toString();
+			String directory = HdfsUtil.path(cacheDirectory, "meta", name);
 
-			FileStatus[] files = fileSystem.listStatus(splitDirectory);
-			if (files != null) {
-				Text line = new Text();
-				for (FileStatus file : files) {
+			Configuration conf = new Configuration();
+			try {
+				FileSystem fileSystem = FileSystem.get(conf);
+				Path splitDirectory = new Path(directory);
 
-					FSDataInputStream is = fileSystem.open(file.getPath());
-					LineReader reader = new LineReader(is);
-					while (reader.readLine(line, 500) > 0) {
-						if (line.toString().length() > 0) {
+				FileStatus[] files = fileSystem.listStatus(splitDirectory);
+				if (files != null) {
+					Text line = new Text();
+					for (FileStatus file : files) {
 
-							FolderCacheEntry entry = FolderCacheEntry
-									.parse(line.toString());
-							if (getCachedDirectory(entry.getSignature()) == null) {
-								entries.add(entry);
-								updates.add(entry);
+						FSDataInputStream is = fileSystem.open(file.getPath());
+						LineReader reader = new LineReader(is);
+						while (reader.readLine(line, 500) > 0) {
+							if (line.toString().length() > 0) {
+
+								FolderCacheEntry entry = FolderCacheEntry
+										.parse(line.toString());
+								if (getCachedDirectory(entry.getSignature()) == null) {
+									entries.add(entry);
+									updates.add(entry);
+								}
+
 							}
-
 						}
-					}
-					reader.close();
+						reader.close();
 
+					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+
+			String target = HdfsUtil.path(cacheDirectory, "index");
+			saveAll(target);
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
 		}
 
-		String target = HdfsUtil.path(cacheDirectory, "index");
-		saveAll(target);
-
 	}
-	
+
 	public void clear(String directory) {
 		log.info("Clear cache...");
-		HdfsUtil.delete(directory);
-		log.info("Cache is empty.");
+
+		if (loaded) {
+
+			HdfsUtil.delete(directory);
+			log.info("Cache is empty.");
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
+		}
 	}
 
 }

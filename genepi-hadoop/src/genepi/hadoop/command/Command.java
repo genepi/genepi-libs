@@ -23,6 +23,8 @@ public class Command implements ICommand {
 
 	private String stdoutFileName = null;
 
+	private String stderrFileName = null;
+
 	private List<String> inputs = new Vector<String>();
 
 	private List<String> outputs = new Vector<String>();
@@ -51,6 +53,10 @@ public class Command implements ICommand {
 		this.stdoutFileName = filename;
 	}
 
+	public void saveStdErr(String filename) {
+		this.stderrFileName = filename;
+	}
+
 	public int execute() {
 
 		List<String> command = new ArrayList<String>();
@@ -77,7 +83,7 @@ public class Command implements ICommand {
 			Thread inputStreamHandler = new Thread(handler);
 
 			Thread errorStreamHandler = new Thread(new CommandStreamHandler(
-					process.getErrorStream()));
+					process.getErrorStream(), stderrFileName));
 
 			inputStreamHandler.start();
 			errorStreamHandler.start();

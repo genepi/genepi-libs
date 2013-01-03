@@ -33,6 +33,8 @@ public class CommandCache {
 
 	public static CommandCache instance = null;
 
+	private boolean loaded = false;
+
 	public static CommandCache getInstance() {
 		if (instance == null) {
 			instance = new CommandCache();
@@ -72,14 +74,19 @@ public class CommandCache {
 				}
 				reader.close();
 
+				loaded = true;
+
 			} else {
 
 				log.info("Cache index file " + indexFile + " not present.");
+
+				loaded = true;
 
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			loaded = false;
 		}
 
 	}
@@ -90,41 +97,60 @@ public class CommandCache {
 	}
 
 	protected boolean isCached(CommandCacheEntry entry) {
-		for (CommandCacheEntry cacheEntry : entries) {
-			if (cacheEntry.isEqual(entry)) {
-				if (entry.getCommand() != null) {
-					log.info(entry.getName() + " is cached.");
+
+		if (loaded) {
+
+			for (CommandCacheEntry cacheEntry : entries) {
+				if (cacheEntry.isEqual(entry)) {
+					if (entry.getCommand() != null) {
+						log.info(entry.getName() + " is cached.");
+					}
+					return true;
 				}
-				return true;
 			}
+			if (entry.getCommand() != null) {
+				log.info(entry.getName() + " is not cached.");
+			}
+
+			return false;
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
 		}
-		if (entry.getCommand() != null) {
-			log.info(entry.getName() + " is not cached.");
-		}
-		return false;
 	}
 
 	public boolean checkOut(ICommand command) {
-		CommandCacheEntry entry = new CommandCacheEntry(command);
-		for (CommandCacheEntry cacheEntry : entries) {
-			if (cacheEntry.isEqual(entry)) {
-				// read files from hdfs cache
-				log.info("Loading " + cacheEntry.getOutputFiles().length
-						+ " file/s from cache...");
 
-				for (int i = 0; i < cacheEntry.getOutputFiles().length; i++) {
-					try {
-						HdfsUtil.get(cacheEntry.getOutputFiles()[i], command
-								.getOutputs().get(i));
-					} catch (IOException e) {
-						e.printStackTrace();
-						return false;
+		if (loaded) {
+
+			CommandCacheEntry entry = new CommandCacheEntry(command);
+			for (CommandCacheEntry cacheEntry : entries) {
+				if (cacheEntry.isEqual(entry)) {
+					// read files from hdfs cache
+					log.info("Loading " + cacheEntry.getOutputFiles().length
+							+ " file/s from cache...");
+
+					for (int i = 0; i < cacheEntry.getOutputFiles().length; i++) {
+						try {
+							HdfsUtil.get(cacheEntry.getOutputFiles()[i],
+									command.getOutputs().get(i));
+						} catch (IOException e) {
+							e.printStackTrace();
+							return false;
+						}
 					}
-				}
 
+				}
 			}
+			return true;
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
 		}
-		return true;
 
 	}
 
@@ -136,22 +162,30 @@ public class CommandCache {
 
 	protected void cache(CommandCacheEntry entry) {
 
-		ICommand command = entry.getCommand();
+		if (loaded) {
 
-		log.info("Put " + entry.getName() + " into cache.");
-		entries.add(entry);
-		updates.add(entry);
+			ICommand command = entry.getCommand();
 
-		log.info("Storing " + command.getOutputs().size()
-				+ " file/s into cache...");
+			log.info("Put " + entry.getName() + " into cache.");
+			entries.add(entry);
+			updates.add(entry);
 
-		// put output files into hdfs
-		for (int i = 0; i < command.getOutputs().size(); i++) {
-			String outputFile = command.getOutputs().get(i);
-			String name = CommandCacheEntry.getMd5Hex(outputFile);
-			String target = HdfsUtil.path(cacheDirectory, "data", name);
-			HdfsUtil.put(outputFile, target);
-			entry.getOutputFiles()[i] = target;
+			log.info("Storing " + command.getOutputs().size()
+					+ " file/s into cache...");
+
+			// put output files into hdfs
+			for (int i = 0; i < command.getOutputs().size(); i++) {
+				String outputFile = command.getOutputs().get(i);
+				String name = CommandCacheEntry.getMd5Hex(outputFile);
+				String target = HdfsUtil.path(cacheDirectory, "data", name);
+				HdfsUtil.put(outputFile, target);
+				entry.getOutputFiles()[i] = target;
+			}
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
 		}
 	}
 
@@ -177,31 +211,40 @@ public class CommandCache {
 
 	public void save(String target) {
 
-		if (!updates.isEmpty()) {
+		if (loaded) {
 
-			log.info("Write " + updates.size()
-					+ " changes into cache index file...");
+			if (!updates.isEmpty()) {
 
-			Configuration conf = new Configuration();
-			try {
+				log.info("Write " + updates.size()
+						+ " changes into cache index file...");
 
-				FileSystem fileSystem = FileSystem.get(conf);
-				FSDataOutputStream out = fileSystem.create(new Path(target));
+				Configuration conf = new Configuration();
+				try {
 
-				for (CommandCacheEntry entry : updates) {
-					out.write(entry.toString().getBytes());
-					out.write('\n');
+					FileSystem fileSystem = FileSystem.get(conf);
+					FSDataOutputStream out = fileSystem
+							.create(new Path(target));
+
+					for (CommandCacheEntry entry : updates) {
+						out.write(entry.toString().getBytes());
+						out.write('\n');
+					}
+
+					out.close();
+
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
-				out.close();
+			} else {
 
-			} catch (Exception e) {
-				e.printStackTrace();
+				log.info("No changes on cache.");
+
 			}
 
 		} else {
 
-			log.info("No changes on cache.");
+			throw new RuntimeException("Cache is not loaded yet.");
 
 		}
 
@@ -209,31 +252,40 @@ public class CommandCache {
 
 	protected void saveAll(String target) {
 
-		if (!updates.isEmpty()) {
+		if (loaded) {
 
-			log.info("Write " + updates.size()
-					+ " changes into cache index file...");
+			if (!updates.isEmpty()) {
 
-			Configuration conf = new Configuration();
-			try {
+				log.info("Write " + updates.size()
+						+ " changes into cache index file...");
 
-				FileSystem fileSystem = FileSystem.get(conf);
-				FSDataOutputStream out = fileSystem.create(new Path(target));
+				Configuration conf = new Configuration();
+				try {
 
-				for (CommandCacheEntry entry : entries) {
-					out.write(entry.toString().getBytes());
-					out.write('\n');
+					FileSystem fileSystem = FileSystem.get(conf);
+					FSDataOutputStream out = fileSystem
+							.create(new Path(target));
+
+					for (CommandCacheEntry entry : entries) {
+						out.write(entry.toString().getBytes());
+						out.write('\n');
+					}
+
+					out.close();
+
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
-				out.close();
+			} else {
 
-			} catch (Exception e) {
-				e.printStackTrace();
+				log.info("No changes on cache.");
+
 			}
 
 		} else {
 
-			log.info("No changes on cache.");
+			throw new RuntimeException("Cache is not loaded yet.");
 
 		}
 
@@ -243,50 +295,68 @@ public class CommandCache {
 
 		log.info("Update cache...");
 
-		String name = job.getJobID().toString();
-		String directory = HdfsUtil.path(cacheDirectory, "meta", name);
+		if (loaded) {
 
-		Configuration conf = new Configuration();
-		try {
-			FileSystem fileSystem = FileSystem.get(conf);
-			Path splitDirectory = new Path(directory);
+			String name = job.getJobID().toString();
+			String directory = HdfsUtil.path(cacheDirectory, "meta", name);
 
-			FileStatus[] files = fileSystem.listStatus(splitDirectory);
-			if (files != null) {
-				Text line = new Text();
-				for (FileStatus file : files) {
+			Configuration conf = new Configuration();
+			try {
+				FileSystem fileSystem = FileSystem.get(conf);
+				Path splitDirectory = new Path(directory);
 
-					FSDataInputStream is = fileSystem.open(file.getPath());
-					LineReader reader = new LineReader(is);
-					while (reader.readLine(line, 500) > 0) {
-						if (line.toString().length() > 0) {
+				FileStatus[] files = fileSystem.listStatus(splitDirectory);
+				if (files != null) {
+					Text line = new Text();
+					for (FileStatus file : files) {
 
-							CommandCacheEntry entry = CommandCacheEntry
-									.parse(line.toString());
-							if (!isCached(entry)) {
-								entries.add(entry);
-								updates.add(entry);
+						FSDataInputStream is = fileSystem.open(file.getPath());
+						LineReader reader = new LineReader(is);
+						while (reader.readLine(line, 500) > 0) {
+							if (line.toString().length() > 0) {
+
+								CommandCacheEntry entry = CommandCacheEntry
+										.parse(line.toString());
+								if (!isCached(entry)) {
+									entries.add(entry);
+									updates.add(entry);
+								}
+
 							}
-
 						}
+						reader.close();
+
 					}
-					reader.close();
-
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
-		String target = HdfsUtil.path(cacheDirectory, "index");
-		saveAll(target);
+			String target = HdfsUtil.path(cacheDirectory, "index");
+			saveAll(target);
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
+		}
 
 	}
 
 	public void clear(String directory) {
+
 		log.info("Clear cache...");
-		HdfsUtil.delete(directory);
-		log.info("Cache is empty.");
+
+		if (loaded) {
+
+			HdfsUtil.delete(directory);
+			log.info("Cache is empty.");
+
+		} else {
+
+			throw new RuntimeException("Cache is not loaded yet.");
+
+		}
 	}
 
 }
