@@ -49,7 +49,7 @@ public class TextCacheEntry {
 
 	@Override
 	public String toString() {
-		return signature + "\t" + key + "\t + value";
+		return signature + "\t" + key + "\t " + value;
 	}
 
 	public static TextCacheEntry parse(String line) {
