@@ -27,7 +27,7 @@ public class CommandStreamPipeHandler implements Runnable {
 			int size = 0;
 
 			while ((size = is.read(buffer)) > 0) {
-				String line = new String(buffer, 0, size);
+				//String line = new String(buffer, 0, size);
 				//stdout.append(line);
 
 				out.write(buffer, 0, size);
