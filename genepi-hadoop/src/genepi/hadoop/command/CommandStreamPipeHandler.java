@@ -10,7 +10,7 @@ public class CommandStreamPipeHandler implements Runnable {
 
 	private OutputStream out;
 
-	private StringBuffer stdout = new StringBuffer();;
+	//private StringBuffer stdout = new StringBuffer();;
 
 	public CommandStreamPipeHandler(InputStream is, OutputStream out) {
 		this.is = is;
@@ -28,7 +28,7 @@ public class CommandStreamPipeHandler implements Runnable {
 
 			while ((size = is.read(buffer)) > 0) {
 				String line = new String(buffer, 0, size);
-				stdout.append(line);
+				//stdout.append(line);
 
 				out.write(buffer, 0, size);
 

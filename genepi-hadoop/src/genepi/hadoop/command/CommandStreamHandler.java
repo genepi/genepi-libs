@@ -8,7 +8,7 @@ public class CommandStreamHandler implements Runnable {
 
 	private InputStream is;
 
-	private StringBuffer stdout = new StringBuffer();;
+	//private StringBuffer stdout = new StringBuffer();;
 
 	private boolean silent = false;
 
@@ -49,7 +49,7 @@ public class CommandStreamHandler implements Runnable {
 
 			while ((size = is.read(buffer)) > 0) {
 				String line = new String(buffer, 0, size);
-				stdout.append(line);
+				//stdout.append(line);
 				if (!silent) {
 					System.out.println(line);
 				}
