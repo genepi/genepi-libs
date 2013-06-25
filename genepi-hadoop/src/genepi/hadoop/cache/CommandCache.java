@@ -72,6 +72,9 @@ public class CommandCache {
 						entries.add(entry);
 					}
 				}
+
+				log.info(entries.size() + " entries loaded.");
+
 				reader.close();
 
 				loaded = true;
@@ -178,8 +181,15 @@ public class CommandCache {
 				String outputFile = command.getOutputs().get(i);
 				String name = CommandCacheEntry.getMd5Hex(outputFile);
 				String target = HdfsUtil.path(cacheDirectory, "data", name);
-				HdfsUtil.put(outputFile, target);
-				entry.getOutputFiles()[i] = target;
+				Path path = new Path(target);
+				try {
+					if (!FileSystem.get(new Configuration()).exists(path)) {
+						HdfsUtil.put(outputFile, target);
+					}
+					entry.getOutputFiles()[i] = target;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 		} else {

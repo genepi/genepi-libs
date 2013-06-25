@@ -15,9 +15,20 @@ public class CacheStore {
 		this.conf = conf;
 	}
 
-	public String getLocalPath(String name) throws IOException {
+	public String getFile(String name) throws IOException {
 
 		Path[] files = DistributedCache.getLocalCacheFiles(conf);
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].getName().equals(name)) {
+				return files[i].toUri().getPath();
+			}
+		}
+		return null;
+	}
+
+	public String getArchive(String name) throws IOException {
+
+		Path[] files = DistributedCache.getLocalCacheArchives(conf);
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].getName().equals(name)) {
 				return files[i].toUri().getPath();
@@ -29,6 +40,11 @@ public class CacheStore {
 	public void addFile(String filename) {
 		URI uri = new Path(filename).toUri();
 		DistributedCache.addCacheFile(uri, conf);
+	}
+
+	public void addArchive(String key, String filename) {
+		URI uri = new Path(filename).toUri();
+		DistributedCache.addCacheArchive(uri, conf);
 	}
 
 }

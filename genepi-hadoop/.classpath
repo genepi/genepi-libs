@@ -3,8 +3,43 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec-1.6.jar"/>
-	<classpathentry kind="lib" path="lib/hadoop-core-0.20.2+737.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/ant-contrib-1.0b3.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/aspectjrt-1.6.5.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/aspectjtools-1.6.5.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-cli-1.2.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-daemon-1.0.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-el-1.0.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-httpclient-3.0.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-logging-api-1.0.4.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/commons-net-1.4.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/core-3.1.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/hadoop-fairscheduler-0.20.2-cdh3u0.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/hsqldb-1.8.0.10.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jackson-core-asl-1.5.2.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jackson-mapper-asl-1.5.2.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jasper-compiler-5.5.12.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jasper-runtime-5.5.12.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jets3t-0.6.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jetty-6.1.26.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jetty-servlet-tester-6.1.26.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jetty-util-6.1.26.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jsch-0.1.42.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jsp-2.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/jsp-api-2.1.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/kfs-0.2.2.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/mockito-all-1.8.2.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/oro-2.0.8.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/servlet-api-2.5-20081211.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/servlet-api-2.5-6.1.14.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/slf4j-api-1.4.3.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/slf4j-log4j12-1.4.3.jar"/>
+	<classpathentry kind="lib" path="/cloudgene.mapred/extern_jars/xmlenc-0.52.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-core-0.20.2-cdh3u5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

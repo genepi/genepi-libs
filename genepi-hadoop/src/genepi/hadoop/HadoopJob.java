@@ -1,7 +1,5 @@
 package genepi.hadoop;
 
-import genepi.hadoop.cache.CommandCache;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -31,6 +29,8 @@ public abstract class HadoopJob {
 	private FileSystem fileSystem;
 
 	private boolean canSet = false;
+
+	private String taskLocalData = "/temp/dist";
 
 	public HadoopJob(String name) {
 
@@ -165,7 +165,7 @@ public abstract class HadoopJob {
 				log.info("  Input Path: " + input);
 				FileInputFormat.addInputPath(job, new Path(input));
 			} catch (IOException e) {
-				log.error("  Errors setting Input Input Path " + input, e);
+				log.error("  Errors setting Input Path " + input, e);
 			}
 			log.info("  Output Path: " + output);
 			FileOutputFormat.setOutputPath(job, new Path(output));

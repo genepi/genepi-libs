@@ -1,9 +1,13 @@
 package genepi.hadoop;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -14,7 +18,11 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.LineReader;
 
 public class HdfsUtil {
 
@@ -70,26 +78,99 @@ public class HdfsUtil {
 
 	}
 
+	public static void getFolder(String hdfs, String filename,
+			Configuration configuration) throws IOException {
+
+		FileSystem fileSystem = FileSystem.get(configuration);
+		Path path = new Path(hdfs);
+
+		FileStatus[] files = fileSystem.listStatus(path);
+
+		new File(filename).mkdirs();
+
+		for (FileStatus file : files) {
+			if (!file.isDir()) {
+				DataOutputStream fos = new DataOutputStream(
+						new FileOutputStream(filename + "/"
+								+ file.getPath().getName()));
+				FSDataInputStream is = fileSystem.open(file.getPath());
+				byte[] readData = new byte[1024];
+				int i = is.read(readData);
+				while (i != -1) {
+					fos.write(readData, 0, i);
+					i = is.read(readData);
+				}
+				is.close();
+				fos.close();
+
+			} else {
+				getFolder(HdfsUtil.path(hdfs, file.getPath().getName()),
+						filename + "/" + file.getPath().getName(),
+						configuration);
+			}
+		}
+
+	}
+
+	public static void getFolder(String hdfs, String filename)
+			throws IOException {
+		Configuration configuration = new Configuration();
+		getFolder(hdfs, filename, configuration);
+	}
+
 	public static void get(String hdfs, String filename) throws IOException {
 		Configuration configuration = new Configuration();
 		get(hdfs, filename, configuration);
 	}
 
+	public static boolean exists(String filename, Configuration conf) {
+		try {
+
+			Path path = new Path(filename);
+			FileSystem fileSystem = FileSystem.get(conf);
+			return fileSystem.exists(path);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	public static boolean exists(String filename) {
+		Configuration configuration = new Configuration();
+		return exists(filename, configuration);
+
+	}
+
 	public static void put(String filename, String target, Configuration conf) {
 		try {
 
-			FileInputStream in = new FileInputStream(filename);
+			File file = new File(filename);
 
-			FileSystem fileSystem = FileSystem.get(conf);
-			FSDataOutputStream out = fileSystem.create(new Path(target));
+			if (file.isDirectory()) {
 
-			IOUtils.copyBytes(in, out, fileSystem.getConf());
+				File[] files = file.listFiles();
+				for (File subFile : files) {
+					put(subFile.getPath(),
+							HdfsUtil.path(target, subFile.getName()));
+				}
 
-			System.out.println("Import file " + filename + " done...("
-					+ out.size() + " bytes)");
+			} else {
 
-			IOUtils.closeStream(in);
-			IOUtils.closeStream(out);
+				FileInputStream in = new FileInputStream(filename);
+
+				FileSystem fileSystem = FileSystem.get(conf);
+				FSDataOutputStream out = fileSystem.create(new Path(target));
+
+				IOUtils.copyBytes(in, out, fileSystem.getConf());
+
+				System.out.println("Import file " + filename + " done...("
+						+ out.size() + " bytes)");
+
+				IOUtils.closeStream(in);
+				IOUtils.closeStream(out);
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -237,6 +318,235 @@ public class HdfsUtil {
 	public static void putZip(String filename, String folder) {
 		Configuration configuration = new Configuration();
 		putZip(filename, folder, configuration);
+	}
+
+	public static void merge(String local, String hdfs, boolean removeHeader) {
+		merge(local, hdfs, removeHeader, null);
+	}
+
+	public static void merge(String local, String hdfs, boolean removeHeader,
+			String ext) {
+
+		try {
+			FileOutputStream out = new FileOutputStream(local);
+
+			Configuration conf = new Configuration();
+
+			FileSystem fileSystem = FileSystem.get(conf);
+			Path pathFolder = new Path(hdfs);
+			FileStatus[] files = fileSystem.listStatus(pathFolder);
+
+			List<String> filenames = new Vector<String>();
+
+			if (files != null) {
+
+				// filters by extension and sorts by filename
+				for (FileStatus file : files) {
+					if (!file.isDir()
+							&& !file.getPath().getName().startsWith("_")
+							&& (ext == null || file.getPath().getName()
+									.endsWith(ext))) {
+						filenames.add(file.getPath().toString());
+					}
+				}
+				Collections.sort(filenames);
+
+				Text line = new Text();
+
+				boolean firstFile = true;
+
+				for (String filename : filenames) {
+					Path path = new Path(filename);
+
+					FSDataInputStream in = fileSystem.open(path);
+
+					LineReader reader = new LineReader(in);
+
+					boolean header = true;
+					while (reader.readLine(line, 1000) > 0) {
+
+						if (removeHeader) {
+
+							if (header) {
+								if (firstFile) {
+									out.write(line.toString().getBytes());
+									firstFile = false;
+								}
+								header = false;
+							} else {
+								out.write('\n');
+								out.write(line.toString().getBytes());
+							}
+
+						} else {
+
+							if (header) {
+								if (firstFile) {
+									firstFile = false;
+								} else {
+									out.write('\n');
+								}
+								header = false;
+							} else {
+								out.write('\n');
+
+							}
+							out.write(line.toString().getBytes());
+						}
+					}
+					line.clear();
+
+					in.close();
+
+				}
+
+				out.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void join(String local, String hdfs, int offset,
+			String delimiter, String ext) {
+
+		try {
+			FileOutputStream out = new FileOutputStream(local);
+
+			Configuration conf = new Configuration();
+
+			FileSystem fileSystem = FileSystem.get(conf);
+			Path pathFolder = new Path(hdfs);
+			FileStatus[] files = fileSystem.listStatus(pathFolder);
+
+			List<String> filenames = new Vector<String>();
+
+			if (files != null) {
+
+				// filters by extension and sorts by filename
+				for (FileStatus file : files) {
+					if (!file.isDir()
+							&& !file.getPath().getName().startsWith("_")
+							&& (ext == null || file.getPath().getName()
+									.endsWith(ext))) {
+						filenames.add(file.getPath().toString());
+					}
+				}
+				Collections.sort(filenames);
+
+				Text line = new Text();
+
+				FSDataInputStream[] streams = new FSDataInputStream[filenames
+						.size()];
+				LineReader[] readers = new LineReader[filenames.size()];
+				for (int i = 0; i < filenames.size(); i++) {
+					System.out.println(filenames.get(i));
+					Path path = new Path(filenames.get(i));
+					streams[i] = fileSystem.open(path);
+					readers[i] = new LineReader(streams[i]);
+				}
+
+				boolean end = false;
+				boolean firstLine = true;
+
+				while (!end) {
+
+					if (firstLine) {
+						firstLine = false;
+					} else {
+						out.write('\n');
+					}
+
+					boolean firstColumn = true;
+
+					for (int i = 0; i < filenames.size(); i++) {
+
+						boolean read = (readers[i].readLine(line, 1000000) > 0);
+
+						if (read) {
+
+							if (firstColumn) {
+
+								out.write(line.toString().getBytes());
+								firstColumn = false;
+
+							} else {
+								out.write(delimiter.getBytes());
+								out.write(line.toString().getBytes());
+							}
+
+						} else {
+							end = true;
+						}
+
+					}
+
+				}
+
+				for (int i = 0; i < filenames.size(); i++) {
+					streams[i].close();
+					readers[i].close();
+				}
+
+				out.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void setExecutable(String filename, boolean execute) {
+		try {
+			Configuration conf = new Configuration();
+			FileSystem fileSystem = FileSystem.get(conf);
+
+			FsPermission other = fileSystem.getFileStatus(new Path(filename))
+					.getPermission();
+			FsPermission permission = new FsPermission(FsAction.ALL,
+					other.getGroupAction(), other.getOtherAction());
+			fileSystem.setPermission(new Path(filename), permission);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static boolean canExecute(String filename) {
+		try {
+			Configuration conf = new Configuration();
+			FileSystem fileSystem = FileSystem.get(conf);
+
+			FsPermission permission = fileSystem.getFileStatus(
+					new Path(filename)).getPermission();
+			return permission.getUserAction().implies(FsAction.EXECUTE);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean canExecute(Path path) {
+		try {
+			Configuration conf = new Configuration();
+			FileSystem fileSystem = FileSystem.get(conf);
+
+			FsPermission permission = fileSystem.getFileStatus(path)
+					.getPermission();
+			return permission.getUserAction().implies(FsAction.EXECUTE);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static void main(String[] args) throws IOException {
+
+		HdfsUtil.join(
+				"lukas.txt",
+				"/home/lukas/hdfs/admin/output/job-20130415-142936/output/temp",
+				2, "\t", ".dose");
+
 	}
 
 }
