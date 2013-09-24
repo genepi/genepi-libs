@@ -1,13 +1,17 @@
 package genepi.hadoop;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -17,6 +21,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -129,6 +134,29 @@ public class HdfsUtil {
 			Path path = new Path(filename);
 			FileSystem fileSystem = FileSystem.get(conf);
 			return fileSystem.exists(path);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	public static boolean copy(String source, String target) {
+		Configuration configuration = new Configuration();
+		return copy(source, target, configuration);
+	}
+
+	public static boolean copy(String source, String target, Configuration conf) {
+
+		try {
+
+			Path pathSource = new Path(source);
+			Path pathTarget = new Path(target);
+			FileSystem fileSystem = FileSystem.get(conf);
+
+			return FileUtil.copy(fileSystem, pathSource, fileSystem,
+					pathTarget, false, conf);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -320,98 +348,123 @@ public class HdfsUtil {
 		putZip(filename, folder, configuration);
 	}
 
-	public static void merge(String local, String hdfs, boolean removeHeader) {
-		merge(local, hdfs, removeHeader, null);
+	public static void mergeAndGz(String local, String hdfs,
+			boolean removeHeader, String ext) throws FileNotFoundException, IOException {
+		GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(local));
+		merge(out, hdfs, removeHeader, ext);
 	}
 
-	public static void merge(String local, String hdfs, boolean removeHeader,
-			String ext) {
+	public static void merge(String local, String hdfs, boolean removeHeader)
+			throws IOException {
+		FileOutputStream out = new FileOutputStream(local);
+		merge(out, hdfs, removeHeader, null);
+	}
 
-		try {
-			FileOutputStream out = new FileOutputStream(local);
+	public static void merge(OutputStream out, String hdfs,
+			boolean removeHeader, String ext) throws IOException {
 
-			Configuration conf = new Configuration();
+		Configuration conf = new Configuration();
 
-			FileSystem fileSystem = FileSystem.get(conf);
-			Path pathFolder = new Path(hdfs);
-			FileStatus[] files = fileSystem.listStatus(pathFolder);
+		FileSystem fileSystem = FileSystem.get(conf);
+		Path pathFolder = new Path(hdfs);
+		FileStatus[] files = fileSystem.listStatus(pathFolder);
 
-			List<String> filenames = new Vector<String>();
+		List<String> filenames = new Vector<String>();
 
-			if (files != null) {
+		if (files != null) {
 
-				// filters by extension and sorts by filename
-				for (FileStatus file : files) {
-					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")
-							&& (ext == null || file.getPath().getName()
-									.endsWith(ext))) {
-						filenames.add(file.getPath().toString());
-					}
+			// filters by extension and sorts by filename
+			for (FileStatus file : files) {
+				if (!file.isDir()
+						&& !file.getPath().getName().startsWith("_")
+						&& (ext == null || file.getPath().getName()
+								.endsWith(ext))) {
+					filenames.add(file.getPath().toString());
 				}
-				Collections.sort(filenames);
+			}
+			Collections.sort(filenames);
 
-				Text line = new Text();
+			Text line = new Text();
 
-				boolean firstFile = true;
+			boolean firstFile = true;
 
-				for (String filename : filenames) {
-					Path path = new Path(filename);
+			for (String filename : filenames) {
+				Path path = new Path(filename);
 
-					FSDataInputStream in = fileSystem.open(path);
+				FSDataInputStream in = fileSystem.open(path);
 
-					LineReader reader = new LineReader(in);
+				LineReader reader = new LineReader(in);
 
-					boolean header = true;
-					while (reader.readLine(line, 1000) > 0) {
+				boolean header = true;
+				while (reader.readLine(line, 1000) > 0) {
 
-						if (removeHeader) {
+					if (removeHeader) {
 
-							if (header) {
-								if (firstFile) {
-									out.write(line.toString().getBytes());
-									firstFile = false;
-								}
-								header = false;
-							} else {
-								out.write('\n');
+						if (header) {
+							if (firstFile) {
 								out.write(line.toString().getBytes());
+								firstFile = false;
 							}
-
+							header = false;
 						} else {
-
-							if (header) {
-								if (firstFile) {
-									firstFile = false;
-								} else {
-									out.write('\n');
-								}
-								header = false;
-							} else {
-								out.write('\n');
-
-							}
+							out.write('\n');
 							out.write(line.toString().getBytes());
 						}
+
+					} else {
+
+						if (header) {
+							if (firstFile) {
+								firstFile = false;
+							} else {
+								out.write('\n');
+							}
+							header = false;
+						} else {
+							out.write('\n');
+
+						}
+						out.write(line.toString().getBytes());
 					}
-					line.clear();
-
-					in.close();
-
 				}
+				line.clear();
 
-				out.close();
+				in.close();
+
 			}
+
+			out.close();
+		}
+
+	}
+
+	public static void join(String local, String hdfs, int offset,
+			String delimiter, String ext) {
+		try {
+			FileOutputStream out = new FileOutputStream(local);
+			join(out, hdfs, offset, delimiter, ext);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void joinAndGz(String local, String hdfs, int offset,
+			String delimiter, String ext) {
+		try {
+			GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(
+					local));
+			join(out, hdfs, offset, delimiter, ext);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void join(String local, String hdfs, int offset,
+	public static void join(OutputStream out, String hdfs, int offset,
 			String delimiter, String ext) {
 
 		try {
-			FileOutputStream out = new FileOutputStream(local);
 
 			Configuration conf = new Configuration();
 
@@ -439,11 +492,12 @@ public class HdfsUtil {
 				FSDataInputStream[] streams = new FSDataInputStream[filenames
 						.size()];
 				LineReader[] readers = new LineReader[filenames.size()];
+				boolean[] empty = new boolean[filenames.size()];
 				for (int i = 0; i < filenames.size(); i++) {
-					System.out.println(filenames.get(i));
 					Path path = new Path(filenames.get(i));
 					streams[i] = fileSystem.open(path);
 					readers[i] = new LineReader(streams[i]);
+					empty[i] = false;
 				}
 
 				boolean end = false;
@@ -458,25 +512,32 @@ public class HdfsUtil {
 					}
 
 					boolean firstColumn = true;
-
+					end = true;
 					for (int i = 0; i < filenames.size(); i++) {
 
-						boolean read = (readers[i].readLine(line, 1000000) > 0);
+						if (!empty[i]) {
 
-						if (read) {
+							boolean read = (readers[i].readLine(line, 1000000) > 0);
 
-							if (firstColumn) {
+							if (read) {
 
-								out.write(line.toString().getBytes());
-								firstColumn = false;
+								if (firstColumn) {
+
+									out.write(line.toString().getBytes());
+									firstColumn = false;
+
+								} else {
+									out.write(delimiter.getBytes());
+									out.write(line.toString().getBytes());
+								}
+
+								end = false;
 
 							} else {
-								out.write(delimiter.getBytes());
-								out.write(line.toString().getBytes());
+								empty[i] = true;
+								end = end && true;
 							}
 
-						} else {
-							end = true;
 						}
 
 					}
@@ -538,6 +599,81 @@ public class HdfsUtil {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public static DataInputStream open(String filename) throws IOException {
+		Configuration configuration = new Configuration();
+		FileSystem fileSystem = FileSystem.get(configuration);
+		Path path = new Path(filename);
+		return fileSystem.open(path);
+	}
+
+	public static FSDataOutputStream create(String filename) throws IOException {
+		Configuration configuration = new Configuration();
+		FileSystem fileSystem = FileSystem.get(configuration);
+		Path path = new Path(filename);
+		return fileSystem.create(path);
+	}
+
+	public static List<String> getFiles(String hdfs) throws IOException {
+
+		 return getFiles(hdfs, null);
+
+	}
+	
+	public static List<String> getFiles(String hdfs, String ext) throws IOException {
+
+		Configuration conf = new Configuration();
+
+		FileSystem fileSystem = FileSystem.get(conf);
+		Path pathFolder = new Path(hdfs);
+		FileStatus[] files = fileSystem.listStatus(pathFolder);
+
+		List<String> filenames = new Vector<String>();
+
+		if (files != null) {
+
+			// filters by extension and sorts by filename
+			for (FileStatus file : files) {
+				if (!file.isDir()
+						&& !file.getPath().getName().startsWith("_")
+						&& (ext == null || file.getPath().getName()
+								.endsWith(ext))) {
+					filenames.add(file.getPath().toString());
+				}
+			}
+			Collections.sort(filenames);
+
+		}
+
+		return filenames;
+
+	}
+
+	public static List<String> getDirectories(String hdfs) throws IOException {
+
+		Configuration conf = new Configuration();
+
+		FileSystem fileSystem = FileSystem.get(conf);
+		Path pathFolder = new Path(hdfs);
+		FileStatus[] files = fileSystem.listStatus(pathFolder);
+
+		List<String> filenames = new Vector<String>();
+
+		if (files != null) {
+
+			// filters by extension and sorts by filename
+			for (FileStatus file : files) {
+				if (file.isDir() && !file.getPath().getName().startsWith("_")) {
+					filenames.add(file.getPath().toString());
+				}
+			}
+			Collections.sort(filenames);
+
+		}
+
+		return filenames;
+
 	}
 
 	public static void main(String[] args) throws IOException {

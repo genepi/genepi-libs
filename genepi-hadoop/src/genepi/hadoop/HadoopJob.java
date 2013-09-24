@@ -20,7 +20,7 @@ public abstract class HadoopJob {
 
 	private String output;
 
-	private String input;
+	private String[] inputs;
 
 	private String name;
 
@@ -113,12 +113,12 @@ public abstract class HadoopJob {
 		}
 	}
 
-	public void setInput(String input) {
-		this.input = input;
+	public void setInput(String... inputs) {
+		this.inputs = inputs;
 	}
 
-	public String getInput() {
-		return input;
+	public String[] getInputs() {
+		return inputs;
 	}
 
 	public void setOutput(String output) {
@@ -162,10 +162,14 @@ public abstract class HadoopJob {
 			setupJob(job);
 
 			try {
-				log.info("  Input Path: " + input);
-				FileInputFormat.addInputPath(job, new Path(input));
+				for (String input : inputs) {
+					log.info("  Input Path: " + input);
+				}
+				for (String input : inputs) {
+					FileInputFormat.addInputPath(job, new Path(input));
+				}
 			} catch (IOException e) {
-				log.error("  Errors setting Input Path " + input, e);
+				log.error("  Errors setting Input Path: ", e);
 			}
 			log.info("  Output Path: " + output);
 			FileOutputFormat.setOutputPath(job, new Path(output));

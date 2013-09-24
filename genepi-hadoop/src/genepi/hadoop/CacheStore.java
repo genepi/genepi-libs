@@ -26,11 +26,13 @@ public class CacheStore {
 		return null;
 	}
 
-	public String getArchive(String name) throws IOException {
+	public String getArchive(String key) throws IOException {
+
+		String filename = conf.get("distcache-" + key);
 
 		Path[] files = DistributedCache.getLocalCacheArchives(conf);
 		for (int i = 0; i < files.length; i++) {
-			if (files[i].getName().equals(name)) {
+			if (files[i].getName().equals(filename)) {
 				return files[i].toUri().getPath();
 			}
 		}
@@ -45,6 +47,8 @@ public class CacheStore {
 	public void addArchive(String key, String filename) {
 		URI uri = new Path(filename).toUri();
 		DistributedCache.addCacheArchive(uri, conf);
+		Path path = new Path(filename);
+		conf.set("distcache-" + key, path.getName());
 	}
 
 }
