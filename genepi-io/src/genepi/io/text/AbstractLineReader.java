@@ -38,9 +38,11 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 		if (line != null) {
 			try {
 				lineNumber++;
-				parseLine(line);
+				if (!line.trim().isEmpty()) {
+					parseLine(line);
+				}
 			} catch (Exception e) {
-				throw new IOException("Line " + lineNumber + ": "
+				throw new IOException(filename + ": Line " + lineNumber + ": "
 						+ e.getMessage());
 			}
 		}

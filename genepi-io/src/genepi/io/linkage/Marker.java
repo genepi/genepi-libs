@@ -17,4 +17,10 @@ public class Marker {
 		this.id = id;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		Marker marker = (Marker) obj;
+		return id.equals(marker.id);
+	}
+
 }

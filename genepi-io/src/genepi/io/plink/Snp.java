@@ -25,14 +25,24 @@ public class Snp {
 
 		} else {
 
-			throw new IOException("Parsing error.");
+			if (tiles.length == 3) {
+
+				chromosome = Integer.parseInt(tiles[0]);
+				id = tiles[1];
+				physicalPosition = Integer.parseInt(tiles[2]);
+
+			} else {
+
+				throw new IOException("Parsing error.");
+
+			}
 
 		}
 
 	}
-	
+
 	public Snp() throws IOException {
-		
+
 	}
 
 	public int getChromosome() {
