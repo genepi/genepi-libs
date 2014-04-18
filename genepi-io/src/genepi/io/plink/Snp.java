@@ -16,7 +16,7 @@ public class Snp {
 		// parse line
 		String[] tiles = line.split("\\s{1}(?!\\s)");
 
-		if (tiles.length == 4) {
+		if (tiles.length == 4 || tiles.length == 6) {
 
 			chromosome = Integer.parseInt(tiles[0]);
 			id = tiles[1];

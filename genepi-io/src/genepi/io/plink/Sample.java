@@ -6,7 +6,7 @@ public class Sample {
 
 	private String id;
 
-	private char[] alleles;
+	private byte[] alleles;
 
 	private String family;
 
@@ -18,9 +18,11 @@ public class Sample {
 
 	private float phenotype;
 
+	private boolean noPhenotype = false;
+
 	public Sample(String line) throws IOException {
 
-		System.out.println("OK");
+		System.out.println(line);
 		
 		// parse line
 		String[] tiles = line.split("\\s{1}(?!\\s)");
@@ -31,6 +33,7 @@ public class Sample {
 		}
 
 		family = tiles[0];
+
 		id = tiles[1];
 		father = tiles[2];
 		mother = tiles[3];
@@ -39,26 +42,116 @@ public class Sample {
 		} catch (Exception e) {
 			throw new IOException("Sex is not an integer: " + tiles[4] + ".");
 		}
-		try {
-			phenotype = Float.parseFloat(tiles[5]);
-		} catch (Exception e) {
-			throw new IOException("Phenotype has not a float value: "
-					+ tiles[5] + ".");
+
+		int offset = 0;
+
+		// phenotype in column 5?
+		if ((tiles.length - 6) % 2 == 0) {
+			offset = 6;
+			noPhenotype = false;
+		} else {
+			offset = 5;
+			noPhenotype = true;
 		}
 
-		alleles = new char[tiles.length - 6];
-		for (int i = 0; i < tiles.length - 6; i++) {
-			if (tiles[i + 6].length() == 1) {
-				alleles[i] = tiles[i + 6].charAt(0);
-			} else {
-				throw new IOException("Genotype coding is invalid: "
-						+ tiles[i + 6] + ".");
+		String firstAllele = tiles[offset];
+		
+		boolean separated = (firstAllele.length() == 1);
+		if (separated){
+			alleles = new byte[tiles.length - offset];
+		}else{
+			alleles = new byte[2 * (tiles.length - offset)+2];
+		}
+
+		int count = 0;
+		for (int i = 0; i < tiles.length - offset; i++) {
+
+			char allele = tiles[i + offset].charAt(0);
+		
+			alleles[count] = 0;
+
+			switch (allele) {
+			case 'N':
+			case 'n':
+			case '0':
+			case 'i':
+			case 'I':
+			case 'd':
+			case 'D':				
+				alleles[count] = 0;
+				break;
+			case 'A':
+			case 'a':
+			case '1':
+				alleles[count] = 1;
+				break;
+			case 'C':
+			case 'c':
+			case '2':
+				alleles[count] = 2;
+				break;
+			case 'G':
+			case 'g':
+			case '3':
+				alleles[count] = 3;
+				break;
+			case 'T':
+			case 't':
+			case '4':
+				alleles[count] = 4;
+				break;
+			default:
+				throw new IOException("Genotype coding is invalid: " + allele
+						+ ".");
 			}
+			count++;
+			
+			if (!separated){
+				char alleleB = tiles[i + offset].charAt(2);
+				alleles[count] = 0;
+
+				switch (alleleB) {
+				case 'N':
+				case 'n':
+				case '0':
+				case 'i':
+				case 'I':
+				case 'd':
+				case 'D':						
+					alleles[count] = 0;
+					break;
+				case 'A':
+				case 'a':
+				case '1':
+					alleles[count] = 1;
+					break;
+				case 'C':
+				case 'c':
+				case '2':
+					alleles[count] = 2;
+					break;
+				case 'G':
+				case 'g':
+				case '3':
+					alleles[count] = 3;
+					break;
+				case 'T':
+				case 't':
+				case '4':
+					alleles[count] = 4;
+					break;
+				default:
+					throw new IOException("Genotype coding is invalid: " + allele
+							+ ".");
+				}
+				count++;
+			}
+
 		}
 
 	}
 
-	public Sample(Sample sample, char[] alleles) {
+	public Sample(Sample sample, byte[] alleles) {
 		family = sample.family;
 		id = sample.id;
 		father = sample.father;
@@ -66,10 +159,6 @@ public class Sample {
 		sex = sample.sex;
 		phenotype = sample.phenotype;
 		this.alleles = alleles;
-	}
-	
-	public Sample(){
-		
 	}
 
 	public String getId() {
@@ -80,11 +169,11 @@ public class Sample {
 		this.id = id;
 	}
 
-	public char[] getAlleles() {
+	public byte[] getAlleles() {
 		return alleles;
 	}
 
-	public void setAlleles(char[] alleles) {
+	public void setAlleles(byte[] alleles) {
 		this.alleles = alleles;
 	}
 
@@ -139,6 +228,10 @@ public class Sample {
 
 	public int getNoSnps() {
 		return alleles.length / 2;
+	}
+
+	public boolean hasNoPhenotype() {
+		return noPhenotype;
 	}
 
 }

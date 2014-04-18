@@ -1,5 +1,6 @@
 package genepi.io.shapeit;
 
+import genepi.io.FileUtil;
 import genepi.io.text.AbstractLineReader;
 
 import java.io.DataInputStream;
@@ -19,7 +20,15 @@ public class ShapeitHapsReader extends AbstractLineReader<ShapeitHap> {
 	}
 
 	protected void parseLine(String line) throws Exception {
-		currentHap = new ShapeitHap(line);
+		String chr = null;
+		String[] tiles =  FileUtil.getFilename(getFilename()).split("\\.");
+		for (String tile : tiles) {
+			if (tile.toLowerCase().startsWith("chr")) {
+				chr = tile.replaceAll("chr", "");
+			}
+		}
+
+		currentHap = new ShapeitHap(line, chr);
 	}
 
 	@Override
@@ -32,4 +41,16 @@ public class ShapeitHapsReader extends AbstractLineReader<ShapeitHap> {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 
+	public static void main(String[] args) {
+		String filename = "metsim.gwas.b37.chr15.sample";
+		String chr = null;
+		String[] tiles =  FileUtil.getFilename(filename).split("\\.");
+		for (String tile : tiles) {
+			if (tile.toLowerCase().startsWith("chr")) {
+				chr = tile.replaceAll("chr", "");
+			}
+		}
+		System.out.println(chr);
+	}
+	
 }

@@ -20,7 +20,7 @@ public class MachSnp {
 		if (tiles.length == 2) {
 			chromosome = tiles[0];
 			position = Long.parseLong(tiles[1]);
-		} else {
+		} else if (tiles.length == 1) {
 
 			if (line.startsWith("rs")) {
 
@@ -31,6 +31,10 @@ public class MachSnp {
 				throw new IOException("Parsing error.");
 
 			}
+		} else {
+
+			throw new IOException("Parsing error.");
+
 		}
 	}
 

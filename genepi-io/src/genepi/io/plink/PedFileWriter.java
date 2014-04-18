@@ -28,7 +28,25 @@ public class PedFileWriter {
 				+ individual.getSex() + " " + individual.getPhenotype());
 
 		for (int i = 0; i < individual.getAlleles().length; i++) {
-			bw.write(" " + individual.getAlleles()[i]);
+
+			switch (individual.getAlleles()[i]) {
+			case 0:
+				bw.write(" 0");
+				break;
+			case 1:
+				bw.write(" A");
+				break;
+			case 2:
+				bw.write(" C");
+				break;
+			case 3:
+				bw.write(" G");
+				break;
+			case 4:
+				bw.write(" T");
+				break;
+			}
+
 		}
 
 	}

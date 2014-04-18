@@ -9,11 +9,11 @@ public class MachHap {
 	private int haps[];
 
 	public MachHap(String line) throws IOException {
-		String[] tiles = line.split(" ");
+		String[] tiles = line.split("\\s+");
 		if (tiles.length == 3) {
 			sample = tiles[0];
 			String type = tiles[1];
-			if (type.equals("HAPLO")) {
+			if (type.equals("HAPLO") || type.equals("HAPLO1") || type.equals("HAPLO2")) {
 				haps = new int[tiles[2].length()];
 				for (int i = 0; i < tiles[2].length(); i++) {
 					haps[i] = Integer.parseInt(tiles[2].charAt(i) + "");

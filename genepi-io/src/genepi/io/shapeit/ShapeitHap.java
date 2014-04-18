@@ -16,35 +16,34 @@ public class ShapeitHap {
 
 	private int haps[];
 
-	public ShapeitHap(String line) throws IOException {
+	public ShapeitHap(String line, String chr) throws IOException {
 		String[] tiles = line.split("\\s{1}(?!\\s)");
 		if (tiles.length > 5) {
 			chromosome = tiles[0].trim();
-			/*if (!Chromosome.isValid(chromosome)) {
-				throw new IOException("Invalid Chromosome " + chromosome + ".");
-			}*/
+			if (!Chromosome.isValid(chromosome)) {
+				
+				if (chr != null){
+					chromosome = chr;
+				}else{				
+					throw new IOException("Invalid Chromosome " + chromosome + ".");
+				}
+			}
 			snp = tiles[1].trim();
 			position = Long.parseLong(tiles[2].trim());
 			firstAllele = tiles[3].trim();
 			secondAllele = tiles[4].trim();
 
-			if (!firstAllele.equals("N") && !firstAllele.equals("A")
-					&& !firstAllele.equals("C") && !firstAllele.equals("G")
-					&& !firstAllele.equals("T") && !firstAllele.equals("0")
-					&& !firstAllele.equals("1") && !firstAllele.equals("2")
-					&& !firstAllele.equals("3") && !firstAllele.equals("4")) {
+			/*if (!firstAllele.equals("A") && !firstAllele.equals("C")
+					&& !firstAllele.equals("G") && !firstAllele.equals("T") && !firstAllele.equals("0")) {
 				throw new IOException("First allele of snp " + snp
 						+ " is invalid (" + firstAllele + ")");
 			}
 
-			if (!secondAllele.equals("N") && !secondAllele.equals("A")
-					&& !secondAllele.equals("C") && !secondAllele.equals("G")
-					&& !secondAllele.equals("T") && !secondAllele.equals("0")
-					&& !secondAllele.equals("1") && !secondAllele.equals("2")
-					&& !secondAllele.equals("3") && !secondAllele.equals("4")) {
+			if (!secondAllele.equals("A") && !secondAllele.equals("C")
+					&& !secondAllele.equals("G") && !secondAllele.equals("T") && !secondAllele.equals("0")) {
 				throw new IOException("Second allele of snp " + snp
 						+ " is invalid (" + secondAllele + ")");
-			}
+			}*/
 
 			haps = new int[tiles.length - 5];
 			for (int i = 0; i < haps.length; i++) {
