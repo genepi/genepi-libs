@@ -28,6 +28,7 @@
 	</distributionManagement>
 
 	<build>
+	<sourceDirectory>src</sourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -53,7 +54,7 @@
 					<message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
 					<noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
 					<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
-					<branch>refs/heads/master</branch>                       <!-- remote branch name -->
+					<branch>refs/heads/genepi-hadoop</branch>                       <!-- remote branch name -->
 					<includes>
 						<include>**/*</include>
 					</includes>
