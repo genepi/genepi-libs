@@ -35,6 +35,8 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 	@Override
 	public boolean next() throws IOException {
 		line = in.readLine();
+
+		
 		if (line != null) {
 			try {
 				lineNumber++;
@@ -72,5 +74,7 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 	public String getFilename() {
 		return filename;
 	}
+	
+
 
 }

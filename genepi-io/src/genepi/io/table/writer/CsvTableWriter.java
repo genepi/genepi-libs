@@ -53,7 +53,7 @@ public class CsvTableWriter extends AbstractTableWriter {
 		try {
 			writer = new CSVWriter(new FileWriter(filename), separator,
 					quote ? CSVWriter.DEFAULT_QUOTE_CHARACTER
-							: CSVWriter.NO_QUOTE_CHARACTER);
+							: CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
