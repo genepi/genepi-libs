@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -30,7 +31,13 @@ public abstract class HadoopJob {
 
 	private boolean canSet = false;
 
+	private Job job;
+
 	private String taskLocalData = "/temp/dist";
+
+	private Class myClass = null;
+
+	private String jar = null;
 
 	public HadoopJob(String name) {
 
@@ -50,6 +57,7 @@ public abstract class HadoopJob {
 
 		readConfigFile();
 
+		
 	}
 
 	protected void readConfigFile() {
@@ -141,19 +149,49 @@ public abstract class HadoopJob {
 
 	}
 
+	public void setJarByClass(Class clazz) {
+		myClass = clazz;
+	}
+
+	public void setJar(String jar) {
+		this.jar = jar;
+	}
+
 	public boolean execute() {
 
 		log.info("Setting up Distributed Cache...");
 		CacheStore cacheStore = new CacheStore(configuration);
 		setupDistributedCache(cacheStore);
 
+		if (jar != null) {
+			String temp = HdfsUtil.path("test", "test.jar");
+			HdfsUtil.put(jar, temp);
+			try {
+				DistributedCache.addFileToClassPath(new Path(
+						"hdfs://localhost:9000/user/lukas/test/test.jar"),
+						configuration);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		log.info("Running Preprocessing...");
 		before();
 
-		Job job = null;
+		job = null;
 		try {
 			job = new Job(configuration, name);
-			job.setJarByClass(HadoopJob.class);
+
+			if (myClass != null) {
+
+				job.setJarByClass(myClass);
+			} else {
+
+				job.setJarByClass(HadoopJob.class);
+
+			}
+
 			log.info("Creating Job " + name + "...");
 
 			// look configuration
@@ -197,6 +235,18 @@ public abstract class HadoopJob {
 			return false;
 		}
 
+	}
+
+	public void kill() throws IOException {
+		job.killJob();
+	}
+
+	public String getJobId() {
+		if (job != null) {
+			return job.getJobID().toString();
+		} else {
+			return null;
+		}
 	}
 
 }
