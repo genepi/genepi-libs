@@ -57,11 +57,18 @@ public abstract class HadoopJob {
 
 		readConfigFile();
 
-		
+	}
+
+	private String getFolder(Class clazz) {
+		return new File(clazz.getProtectionDomain().getCodeSource()
+				.getLocation().getPath()).getParent();
 	}
 
 	protected void readConfigFile() {
-		File file = new File(CONFIG_FILE);
+
+		String folder = getFolder(HadoopJob.class);
+
+		File file = new File(folder + "/" + CONFIG_FILE);
 		if (file.exists()) {
 			log.info("Loading distributed configuration file " + CONFIG_FILE
 					+ "...");
@@ -161,7 +168,12 @@ public abstract class HadoopJob {
 
 		log.info("Setting up Distributed Cache...");
 		CacheStore cacheStore = new CacheStore(configuration);
-		setupDistributedCache(cacheStore);
+		try {
+			setupDistributedCache(cacheStore);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 
 		if (jar != null) {
 			String temp = HdfsUtil.path("test", "test.jar");
