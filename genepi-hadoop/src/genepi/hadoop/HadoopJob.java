@@ -87,7 +87,7 @@ public abstract class HadoopJob {
 		}
 	}
 
-	protected void setupDistributedCache(CacheStore cache) {
+	protected void setupDistributedCache(CacheStore cache) throws IOException{
 
 	}
 
@@ -171,7 +171,7 @@ public abstract class HadoopJob {
 		try {
 			setupDistributedCache(cacheStore);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Set up Distributed Cache failed.",  e);
 			return false;
 		}
 
