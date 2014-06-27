@@ -55,8 +55,6 @@ public abstract class HadoopJob {
 
 		canSet = true;
 
-		readConfigFile();
-
 	}
 
 	private String getFolder(Class clazz) {
@@ -66,12 +64,18 @@ public abstract class HadoopJob {
 
 	protected void readConfigFile() {
 
-		String folder = getFolder(HadoopJob.class);
+		String folder = null;
+
+		if (myClass != null) {
+			folder = getFolder(myClass);
+		} else {
+			folder = getFolder(HadoopJob.class);
+		}
 
 		File file = new File(folder + "/" + CONFIG_FILE);
 		if (file.exists()) {
-			log.info("Loading distributed configuration file " + CONFIG_FILE
-					+ "...");
+			log.info("Loading distributed configuration file " + folder + "/"
+					+ CONFIG_FILE + "...");
 			PreferenceStore preferenceStore = new PreferenceStore(file);
 			preferenceStore.write(configuration);
 			for (Object key : preferenceStore.getKeys()) {
@@ -87,7 +91,7 @@ public abstract class HadoopJob {
 		}
 	}
 
-	protected void setupDistributedCache(CacheStore cache) throws IOException{
+	protected void setupDistributedCache(CacheStore cache) throws IOException {
 
 	}
 
@@ -166,12 +170,14 @@ public abstract class HadoopJob {
 
 	public boolean execute() {
 
+		readConfigFile();
+		
 		log.info("Setting up Distributed Cache...");
 		CacheStore cacheStore = new CacheStore(configuration);
 		try {
 			setupDistributedCache(cacheStore);
 		} catch (Exception e) {
-			log.error("Set up Distributed Cache failed.",  e);
+			log.error("Set up Distributed Cache failed.", e);
 			return false;
 		}
 
