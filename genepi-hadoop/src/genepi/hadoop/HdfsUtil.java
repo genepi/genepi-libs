@@ -136,7 +136,6 @@ public class HdfsUtil {
 			return fileSystem.exists(path);
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			return false;
 		}
 
@@ -192,9 +191,6 @@ public class HdfsUtil {
 				FSDataOutputStream out = fileSystem.create(new Path(target));
 
 				IOUtils.copyBytes(in, out, fileSystem.getConf());
-
-				System.out.println("Import file " + filename + " done...("
-						+ out.size() + " bytes)");
 
 				IOUtils.closeStream(in);
 				IOUtils.closeStream(out);
@@ -336,7 +332,6 @@ public class HdfsUtil {
 			}// while
 
 			zipinputstream.close();
-			System.out.println("done extracting");
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1136,5 +1131,5 @@ public class HdfsUtil {
 		}
 
 	}
-	
+
 }
