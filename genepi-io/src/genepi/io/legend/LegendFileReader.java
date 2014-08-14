@@ -54,7 +54,7 @@ public class LegendFileReader extends AbstractLineReader<String> {
 			String line = get();
 			if (!line.startsWith("id")) {
 				String[] tiles = line.split(" ", 3);
-				int position = Integer.parseInt(tiles[idCol]);
+				int position = Integer.parseInt(tiles[posCol]);
 				index.put(position, offset);
 			} else {
 
@@ -74,16 +74,16 @@ public class LegendFileReader extends AbstractLineReader<String> {
 					if (tile.equals("a1")) {
 						a1Col = i;
 					}
-					if (tile.equals("afrAaf")) {
+					if (tile.equals("afr.aaf")) {
 						afrAafCol = i;
 					}
-					if (tile.equals("amrAaf")) {
+					if (tile.equals("amr.aaf")) {
 						amrAafCol = i;
 					}
-					if (tile.equals("eurAaf")) {
+					if (tile.equals("eur.aaf")) {
 						eurAafCol = i;
 					}
-					if (tile.equals("asnAaf")) {
+					if (tile.equals("asn.aaf")) {
 						asnAafCol = i;
 					}
 

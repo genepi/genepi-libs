@@ -1,14 +1,27 @@
 package genepi.hadoop;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapred.TaskCompletionEvent;
+import org.apache.hadoop.mapred.TaskLog;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -38,6 +51,8 @@ public abstract class HadoopJob {
 	private Class myClass = null;
 
 	private String jar = null;
+
+	private RunningJob runningJob = null;
 
 	public HadoopJob(String name) {
 
@@ -171,7 +186,7 @@ public abstract class HadoopJob {
 	public boolean execute() {
 
 		readConfigFile();
-		
+
 		log.info("Setting up Distributed Cache...");
 		CacheStore cacheStore = new CacheStore(configuration);
 		try {
@@ -231,7 +246,25 @@ public abstract class HadoopJob {
 			FileOutputFormat.setOutputPath(job, new Path(output));
 
 			log.info("Running Job...");
-			job.waitForCompletion(true);
+			// job.waitForCompletion(true);
+
+			job.submit();
+
+			JobClient jobClient = new JobClient(getConfiguration());
+
+			while (!job.isComplete()) {
+				if (runningJob == null) {
+					if (job.getJobID() != null) {
+						String id = job.getJobID().toString();
+
+						if (jobClient != null) {
+							runningJob = jobClient.getJob(id);
+							System.out.println("Found running job!!");
+						}
+					}
+				}
+				Thread.sleep(1000);
+			}
 
 			boolean result = job.isSuccessful();
 
@@ -246,6 +279,10 @@ public abstract class HadoopJob {
 				cleanupJob(job);
 				return false;
 			}
+		} catch (InterruptedException e) {
+			log.error("Execution canceld by user.");
+			cleanupJob(job);
+			return false;
 
 		} catch (Exception e) {
 			log.error("Execution failed.", e);
@@ -267,4 +304,99 @@ public abstract class HadoopJob {
 		}
 	}
 
+	public void downloadFailedLogs(String folder) {
+
+		log.info("Downloading events...");
+
+		List<TaskCompletionEvent> completionEvents = new LinkedList<TaskCompletionEvent>();
+		try {
+			while (true) {
+				TaskCompletionEvent[] bunchOfEvents;
+				bunchOfEvents = runningJob
+						.getTaskCompletionEvents(completionEvents.size());
+				if (bunchOfEvents == null || bunchOfEvents.length == 0) {
+					break;
+				}
+				completionEvents.addAll(Arrays.asList(bunchOfEvents));
+
+			}
+
+		} catch (Exception e) {
+			log.error("Downloading events failed.", e);
+			return;
+		}
+
+		log.info("Downloaded " + completionEvents.size() + " events.");
+
+		log.info("Downloading " + completionEvents.size() + " log files...");
+		for (TaskCompletionEvent taskCompletionEvent : completionEvents) {
+
+			StringBuilder logURL = new StringBuilder(
+					taskCompletionEvent.getTaskTrackerHttp());
+			logURL.append("/tasklog?attemptid=");
+			logURL.append(taskCompletionEvent.getTaskAttemptId().toString());
+			logURL.append("&plaintext=true");
+			logURL.append("&filter=" + TaskLog.LogName.STDOUT);
+
+			log.info("Downloading " + logURL + "...");
+
+			try {
+				URL url = new URL(logURL.toString());
+				HttpURLConnection conn = (HttpURLConnection) url
+						.openConnection();
+				BufferedInputStream in = new BufferedInputStream(
+						conn.getInputStream());
+
+				String local = folder + "/"
+						+ taskCompletionEvent.getStatus().toString() + "_"
+						+ taskCompletionEvent.getTaskAttemptId().toString()
+						+ "_stdout.txt";
+
+				BufferedOutputStream out = new BufferedOutputStream(
+						new FileOutputStream(local));
+				IOUtils.copy(in, out);
+
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
+			} catch (Exception e) {
+				log.error("Downloading log files failed.", e);
+				return;
+			}
+
+			logURL = new StringBuilder(taskCompletionEvent.getTaskTrackerHttp());
+			logURL.append("/tasklog?attemptid=");
+			logURL.append(taskCompletionEvent.getTaskAttemptId().toString());
+			logURL.append("&plaintext=true");
+			logURL.append("&filter=" + TaskLog.LogName.STDERR);
+
+			log.info("Downloading " + logURL + "...");
+
+			try {
+				URL url = new URL(logURL.toString());
+				HttpURLConnection conn = (HttpURLConnection) url
+						.openConnection();
+				BufferedInputStream in = new BufferedInputStream(
+						conn.getInputStream());
+
+				String local = folder + "/"
+						+ taskCompletionEvent.getStatus().toString() + "_"
+						+ taskCompletionEvent.getTaskAttemptId().toString()
+						+ "_stderr.txt";
+
+				BufferedOutputStream out = new BufferedOutputStream(
+						new FileOutputStream(local));
+				IOUtils.copy(in, out);
+
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
+			} catch (Exception e) {
+				log.error("Downloading log files failed.", e);
+				return;
+			}
+
+		}
+
+		log.info("Downloading log files successful.");
+
+	}
 }

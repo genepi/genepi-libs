@@ -82,8 +82,10 @@ public class Command implements ICommand {
 			handler.setSilent(silent);
 			Thread inputStreamHandler = new Thread(handler);
 
-			Thread errorStreamHandler = new Thread(new CommandStreamHandler(
-					process.getErrorStream(), stderrFileName));
+			CommandStreamHandler handler2 = new CommandStreamHandler(
+					process.getErrorStream(), stderrFileName);
+			handler2.setSilent(silent);
+			Thread errorStreamHandler = new Thread(handler2);
 
 			inputStreamHandler.start();
 			errorStreamHandler.start();
