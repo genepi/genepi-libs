@@ -62,11 +62,6 @@ public class Command implements ICommand {
 		List<String> command = new ArrayList<String>();
 
 		command.add(cmd);
-		if (params != null) {
-			for (String param : params) {
-				command.add(param);
-			}
-		}
 
 		try {
 
@@ -189,6 +184,16 @@ public class Command implements ICommand {
 	@Override
 	public String getName() {
 		return cmd;
+	}
+
+	public String getExecutedCommand() {
+		String executedCommand = cmd;
+		if (params != null) {
+			for (String param : params) {
+				executedCommand += " " + param;
+			}
+		}
+		return executedCommand;
 	}
 
 }
