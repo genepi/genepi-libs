@@ -63,6 +63,12 @@ public class Command implements ICommand {
 
 		command.add(cmd);
 
+		if (params != null) {
+			for (String param : params) {
+				command.add(param);
+			}
+		}
+
 		try {
 
 			ProcessBuilder builder = new ProcessBuilder(command);
