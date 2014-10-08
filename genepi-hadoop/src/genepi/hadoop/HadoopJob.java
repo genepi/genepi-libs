@@ -25,7 +25,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public abstract class HadoopJob {
 
-	protected static final Log log = LogFactory.getLog(HadoopJob.class);
+	protected Log log = null;
 
 	public static final String CONFIG_FILE = "job.config";
 
@@ -51,8 +51,8 @@ public abstract class HadoopJob {
 
 	private RunningJob runningJob = null;
 
-	public HadoopJob(String name) {
-
+	public HadoopJob(String name, Log log) {
+		this.log = log;
 		this.name = name;
 		configuration = new Configuration();
 
@@ -66,6 +66,13 @@ public abstract class HadoopJob {
 		}
 
 		canSet = true;
+
+	
+	}
+
+	public HadoopJob(String name) {
+
+		this(name, LogFactory.getLog(HadoopJob.class));
 
 	}
 
