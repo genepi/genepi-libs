@@ -785,7 +785,9 @@ public class HdfsUtil {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
 					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")) {
+							&& !file.getPath().getName().startsWith("_")
+							&& !file.getPath().getName()
+									.startsWith(".pig_schema")) {
 						FSDataInputStream in = fileSystem.open(path);
 
 						LineReader reader = new LineReader(in);
@@ -859,7 +861,9 @@ public class HdfsUtil {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
 					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")) {
+							&& !file.getPath().getName().startsWith("_")
+							&& !file.getPath().getName()
+									.startsWith(".pig_schema")) {
 						FSDataInputStream in = fileSystem.open(path);
 
 						LineReader reader = new LineReader(in);
