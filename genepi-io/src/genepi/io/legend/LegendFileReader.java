@@ -10,12 +10,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class LegendFileReader extends AbstractLineReader<String> {
 
 	private Map<Integer, Integer> index = new HashMap<Integer, Integer>();
+
+	private Set<Integer> duplicates = new HashSet<Integer>();
 
 	private String line;
 
@@ -55,7 +59,14 @@ public class LegendFileReader extends AbstractLineReader<String> {
 			if (!line.startsWith("id")) {
 				String[] tiles = line.split(" ", 3);
 				int position = Integer.parseInt(tiles[posCol]);
+
+				//store duplicates
+				if (index.containsKey(position)) {
+					duplicates.add(position);
+				}
+
 				index.put(position, offset);
+
 			} else {
 
 				// parse header
@@ -103,6 +114,11 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 	public String findByPosition(int position) throws IOException {
 
+		//ignore duplicates
+		if (duplicates.contains(position)){
+			return null;
+		}
+		
 		Integer offset = index.get(position);
 		if (offset != null) {
 
