@@ -56,7 +56,7 @@ public abstract class HadoopJob {
 		this.name = name;
 		configuration = new Configuration();
 
-		configuration.set("mapred.child.java.opts", "-Xmx4000M");
+		//configuration.set("mapred.child.java.opts", "-Xmx4000M");
 		configuration.set("mapred.task.timeout", "0");
 
 		try {
