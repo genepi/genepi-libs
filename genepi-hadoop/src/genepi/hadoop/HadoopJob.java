@@ -56,7 +56,7 @@ public abstract class HadoopJob {
 		this.name = name;
 		configuration = new Configuration();
 
-		//configuration.set("mapred.child.java.opts", "-Xmx4000M");
+		// configuration.set("mapred.child.java.opts", "-Xmx4000M");
 		configuration.set("mapred.task.timeout", "0");
 
 		try {
@@ -67,7 +67,6 @@ public abstract class HadoopJob {
 
 		canSet = true;
 
-	
 	}
 
 	public HadoopJob(String name) {
@@ -181,6 +180,7 @@ public abstract class HadoopJob {
 
 	public void setJarByClass(Class clazz) {
 		myClass = clazz;
+		configuration.setClassLoader(clazz.getClassLoader());
 	}
 
 	public void setJar(String jar) {
@@ -201,11 +201,17 @@ public abstract class HadoopJob {
 		}
 
 		if (jar != null) {
-			String temp = HdfsUtil.path("test", "test.jar");
+
+			String temp = HdfsUtil.makeAbsolute(
+					HdfsUtil.path("test", "test.jar")).replace("hdfs://", "");
+			HdfsUtil.delete(temp);
+
+			log.info("Copy " + jar + " to " + temp + "...");
 			HdfsUtil.put(jar, temp);
 			try {
-				DistributedCache.addFileToClassPath(new Path(
-						"hdfs://localhost:9000/user/lukas/test/test.jar"),
+				log.info("Add " + temp + " to classpath...");
+				cacheStore.addFile(temp);
+				DistributedCache.addFileToClassPath(new Path(temp),
 						configuration);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -248,10 +254,11 @@ public abstract class HadoopJob {
 			}
 			log.info("  Output Path: " + output);
 			FileOutputFormat.setOutputPath(job, new Path(output));
-
+			log.info("Driver jar: " + job.getJar());
 			log.info("Running Job...");
 			// job.waitForCompletion(true);
 
+			
 			job.submit();
 
 			JobClient jobClient = new JobClient(getConfiguration());
