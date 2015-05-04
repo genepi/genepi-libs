@@ -29,6 +29,9 @@ public abstract class WorkflowContext {
 
 	public abstract boolean sendMail(String subject, String body)
 			throws Exception;
+	
+	public abstract boolean sendMail(String to, String subject, String body)
+			throws Exception;	
 
 	public abstract Set<String> getInputs();
 

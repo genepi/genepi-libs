@@ -73,6 +73,12 @@ public class CommandLineContext extends WorkflowContext {
 	}
 
 	@Override
+	public boolean sendMail(String to, String subject, String body)
+			throws Exception {
+		return false;
+	}
+	
+	@Override
 	public Set<String> getInputs() {
 		return params.keySet();
 	}
