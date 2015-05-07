@@ -60,6 +60,26 @@ public class CsvTableReader extends AbstractTableReader {
 			e.printStackTrace();
 		}
 	}
+	
+	public CsvTableReader(String filename, char seperator, boolean ignoreComment) {
+
+		this.filename = filename;
+
+		try {
+			reader = new CSVReader(new FileReader(filename), seperator);
+			header = reader.readNext();
+			//while (header != null) {
+			//	header = reader.readNext();
+			//}
+			if (header != null) {
+				for (int i = 0; i < header.length; i++) {
+					columns2Index.put(header[i], i);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public CsvTableReader(DataInputStream in, char seperator) {
 
