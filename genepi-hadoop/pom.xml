@@ -54,12 +54,12 @@
 					<message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
 					<noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
 					<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
-					<branch>refs/heads/genepi-hadoop</branch>                       <!-- remote branch name -->
+					<branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
 					<merge>true</merge> <!-- keep old artifacts -->
 					<includes>
 						<include>**/*</include>
 					</includes>
-					<repositoryName>maven</repositoryName>      <!-- github repo name -->
+					<repositoryName>maven-repository</repositoryName>      <!-- github repo name -->
 					<repositoryOwner>genepi</repositoryOwner>    <!-- github username -->
 				</configuration>
 				<executions>
