@@ -31,6 +31,23 @@ import org.apache.hadoop.util.LineReader;
 
 public class HdfsUtil {
 
+	static Configuration defaultConfiguration = new Configuration();
+
+	public static void setDefaultConfiguration(
+			Configuration defaultConfiguration) {
+		HdfsUtil.defaultConfiguration = defaultConfiguration;
+	}
+
+	public static Configuration getConfiguration() {
+		return new Configuration(defaultConfiguration);
+	}
+	
+	public static FileSystem getFileSystem() throws IOException {
+		Configuration configuration = getConfiguration();
+		FileSystem fileSystem = FileSystem.get(configuration);
+		return fileSystem;
+	}
+
 	public static void get(String hdfs, String filename,
 			Configuration configuration) throws IOException {
 
@@ -119,12 +136,12 @@ public class HdfsUtil {
 
 	public static void getFolder(String hdfs, String filename)
 			throws IOException {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		getFolder(hdfs, filename, configuration);
 	}
 
 	public static void get(String hdfs, String filename) throws IOException {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		get(hdfs, filename, configuration);
 	}
 
@@ -142,7 +159,7 @@ public class HdfsUtil {
 	}
 
 	public static boolean copy(String source, String target) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		return copy(source, target, configuration);
 	}
 
@@ -165,7 +182,7 @@ public class HdfsUtil {
 	}
 
 	public static boolean exists(String filename) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		return exists(filename, configuration);
 
 	}
@@ -202,7 +219,7 @@ public class HdfsUtil {
 	}
 
 	public static void put(String filename, String target) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		put(filename, target, configuration);
 	}
 
@@ -220,7 +237,7 @@ public class HdfsUtil {
 	}
 
 	public static boolean delete(String directory) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		return delete(directory, configuration);
 	}
 
@@ -293,7 +310,7 @@ public class HdfsUtil {
 	}
 
 	public static void getAsZip(String zipFile, String hdfs, boolean merge) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		getAsZip(zipFile, hdfs, merge, configuration);
 	}
 
@@ -339,7 +356,7 @@ public class HdfsUtil {
 	}
 
 	public static void putZip(String filename, String folder) {
-		Configuration configuration = new Configuration();
+		Configuration configuration = getConfiguration();
 		putZip(filename, folder, configuration);
 	}
 
@@ -359,9 +376,7 @@ public class HdfsUtil {
 	public static void merge(OutputStream out, String hdfs,
 			boolean removeHeader, String ext) throws IOException {
 
-		Configuration conf = new Configuration();
-
-		FileSystem fileSystem = FileSystem.get(conf);
+		FileSystem fileSystem = getFileSystem();
 		Path pathFolder = new Path(hdfs);
 		FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -462,9 +477,7 @@ public class HdfsUtil {
 
 		try {
 
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -554,8 +567,7 @@ public class HdfsUtil {
 
 	public static void setExecutable(String filename, boolean execute) {
 		try {
-			Configuration conf = new Configuration();
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			FsPermission other = fileSystem.getFileStatus(new Path(filename))
 					.getPermission();
@@ -569,8 +581,7 @@ public class HdfsUtil {
 
 	public static boolean canExecute(String filename) {
 		try {
-			Configuration conf = new Configuration();
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			FsPermission permission = fileSystem.getFileStatus(
 					new Path(filename)).getPermission();
@@ -584,8 +595,7 @@ public class HdfsUtil {
 
 	public static boolean canExecute(Path path) {
 		try {
-			Configuration conf = new Configuration();
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			FsPermission permission = fileSystem.getFileStatus(path)
 					.getPermission();
@@ -598,15 +608,13 @@ public class HdfsUtil {
 	}
 
 	public static DataInputStream open(String filename) throws IOException {
-		Configuration configuration = new Configuration();
-		FileSystem fileSystem = FileSystem.get(configuration);
+		FileSystem fileSystem = getFileSystem();
 		Path path = new Path(filename);
 		return fileSystem.open(path);
 	}
 
 	public static FSDataOutputStream create(String filename) throws IOException {
-		Configuration configuration = new Configuration();
-		FileSystem fileSystem = FileSystem.get(configuration);
+		FileSystem fileSystem = getFileSystem();
 		Path path = new Path(filename);
 		return fileSystem.create(path);
 	}
@@ -620,9 +628,7 @@ public class HdfsUtil {
 	public static List<String> getFiles(String hdfs, String ext)
 			throws IOException {
 
-		Configuration conf = new Configuration();
-
-		FileSystem fileSystem = FileSystem.get(conf);
+		FileSystem fileSystem = getFileSystem();
 		Path pathFolder = new Path(hdfs);
 		FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -649,9 +655,7 @@ public class HdfsUtil {
 
 	public static List<String> getDirectories(String hdfs) throws IOException {
 
-		Configuration conf = new Configuration();
-
-		FileSystem fileSystem = FileSystem.get(conf);
+		FileSystem fileSystem = getFileSystem();
 		Path pathFolder = new Path(hdfs);
 		FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -673,22 +677,10 @@ public class HdfsUtil {
 
 	}
 
-	public static void main(String[] args) throws IOException {
-
-		HdfsUtil.join(
-				"lukas.txt",
-				"/home/lukas/hdfs/admin/output/job-20130415-142936/output/temp",
-				2, "\t", ".dose");
-
-	}
-
 	public static String makeAbsolute(String path) {
 
-		Configuration conf = new Configuration();
-		FileSystem fileSystem;
-
 		try {
-			fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			String temp = "";
 			if (fileSystem.getHomeDirectory().toString().startsWith("file:/")) {
@@ -722,10 +714,7 @@ public class HdfsUtil {
 			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
 					zipFile));
 
-			// Compress the files
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -766,10 +755,7 @@ public class HdfsUtil {
 			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
 					zipFile));
 
-			// Compress the files
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -846,9 +832,7 @@ public class HdfsUtil {
 		try {
 			FileOutputStream out = null;
 
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -921,9 +905,7 @@ public class HdfsUtil {
 
 		try {
 
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
 
@@ -959,9 +941,7 @@ public class HdfsUtil {
 
 		try {
 
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			Path path = new Path(hdfs);
 
@@ -989,9 +969,7 @@ public class HdfsUtil {
 
 		try {
 
-			Configuration conf = new Configuration();
-
-			FileSystem fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 
 			Path path = new Path(hdfs);
 
@@ -1032,10 +1010,8 @@ public class HdfsUtil {
 	}
 
 	public static boolean createDirectory(String directory) {
-		Configuration conf = new Configuration();
-		FileSystem fileSystem;
 		try {
-			fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			return createDirectory(fileSystem, directory);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1056,10 +1032,8 @@ public class HdfsUtil {
 	}
 
 	public static boolean rename(String oldPath, String newPath) {
-		Configuration conf = new Configuration();
-		FileSystem fileSystem;
 		try {
-			fileSystem = FileSystem.get(conf);
+			FileSystem fileSystem = getFileSystem();
 			return rename(fileSystem, oldPath, newPath);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1070,8 +1044,7 @@ public class HdfsUtil {
 	public static void checkOut(String hdfs, String filename)
 			throws IOException {
 
-		Configuration conf = new Configuration();
-		FileSystem fileSystem = FileSystem.get(conf);
+		FileSystem fileSystem = getFileSystem();
 		Path path = new Path(hdfs);
 
 		if (fileSystem.isDirectory(path)) {
