@@ -41,8 +41,7 @@ public class LegendFileReader extends AbstractLineReader<String> {
 		super(inputStream);
 	}
 
-	public LegendFileReader(String filename, String population)
-			throws IOException {
+	public LegendFileReader(String filename, String population) throws IOException {
 		super(filename);
 		this.population = population;
 	}
@@ -149,7 +148,9 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 			float aaf = 0;
 
-			aaf = Float.parseFloat(tiles[popCol]);
+			if (popCol != -1) {
+				aaf = Float.parseFloat(tiles[popCol]);
+			}
 
 			entry.setFrequencyA(1 - aaf);
 			entry.setFrequencyB(aaf);
