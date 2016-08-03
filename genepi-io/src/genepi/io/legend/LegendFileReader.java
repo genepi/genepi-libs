@@ -35,17 +35,13 @@ public class LegendFileReader extends AbstractLineReader<String> {
 	private int posCol = -1;
 	private int a0Col = -1;
 	private int a1Col = -1;
-	private int afrAafCol = -1;
-	private int amrAafCol = -1;
-	private int eurAafCol = -1;
-	private int asnAafCol = -1;
+	private int popCol = -1;
 
 	public LegendFileReader(DataInputStream inputStream) throws IOException {
 		super(inputStream);
 	}
 
-	public LegendFileReader(String filename, String population)
-			throws IOException {
+	public LegendFileReader(String filename, String population) throws IOException {
 		super(filename);
 		this.population = population;
 	}
@@ -60,7 +56,7 @@ public class LegendFileReader extends AbstractLineReader<String> {
 				String[] tiles = line.split(" ", 3);
 				int position = Integer.parseInt(tiles[posCol]);
 
-				//store duplicates
+				// store duplicates
 				if (index.containsKey(position)) {
 					duplicates.add(position);
 				}
@@ -85,17 +81,8 @@ public class LegendFileReader extends AbstractLineReader<String> {
 					if (tile.equals("a1")) {
 						a1Col = i;
 					}
-					if (tile.equals("afr.aaf")) {
-						afrAafCol = i;
-					}
-					if (tile.equals("amr.aaf")) {
-						amrAafCol = i;
-					}
-					if (tile.equals("eur.aaf")) {
-						eurAafCol = i;
-					}
-					if (tile.equals("asn.aaf")) {
-						asnAafCol = i;
+					if (tile.equals(population + ".aaf")) {
+						popCol = i;
 					}
 
 					i++;
@@ -114,11 +101,11 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 	public String findByPosition(int position) throws IOException {
 
-		//ignore duplicates
-		if (duplicates.contains(position)){
+		// ignore duplicates
+		if (duplicates.contains(position)) {
 			return null;
 		}
-		
+
 		Integer offset = index.get(position);
 		if (offset != null) {
 
@@ -161,20 +148,8 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 			float aaf = 0;
 
-			if (population.equals("afr")) {
-				aaf = Float.parseFloat(tiles[afrAafCol]);
-			}
-
-			if (population.equals("amr")) {
-				aaf = Float.parseFloat(tiles[amrAafCol]);
-			}
-
-			if (population.equals("asn")) {
-				aaf = Float.parseFloat(tiles[asnAafCol]);
-			}
-
-			if (population.equals("eur")) {
-				aaf = Float.parseFloat(tiles[eurAafCol]);
+			if (popCol != -1) {
+				aaf = Float.parseFloat(tiles[popCol]);
 			}
 
 			entry.setFrequencyA(1 - aaf);
