@@ -4,7 +4,7 @@
 
 	<groupId>genepi</groupId>
 	<artifactId>genepi-db</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 
 	<name>genepi-db</name>
 
@@ -12,6 +12,14 @@
 		<github.global.server>github</github.global.server>
 		<jdk.version>1.7</jdk.version>
 	</properties>
+
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>https://raw.githubusercontent.com/genepi/genepi-libs/master/genepi-db/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<distributionManagement>
 		<repository>
@@ -44,7 +52,7 @@
 			<plugin>
 				<groupId>com.github.github</groupId>
 				<artifactId>site-maven-plugin</artifactId>
-				<version>0.11</version>
+				<version>0.12</version>
 				<configuration>
 					<message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
 					<noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
@@ -110,7 +118,7 @@
 		<dependency>
 			<groupId>genepi</groupId>
 			<artifactId>genepi-io</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.2</version>
 		</dependency>
 
 		<dependency>

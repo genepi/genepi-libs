@@ -9,14 +9,14 @@
 		<jdk.version>1.7</jdk.version>
 	</properties>
 
-    <licenses>
-        <license>
-            <name>Apache License 2.0</name>
-            <url>https://raw.githubusercontent.com/genepi/genepi-libs/master/genepi-io/LICENSE</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-    
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>https://raw.githubusercontent.com/genepi/genepi-libs/master/genepi-io/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<distributionManagement>
 		<repository>
 			<id>internal.repo</id>
