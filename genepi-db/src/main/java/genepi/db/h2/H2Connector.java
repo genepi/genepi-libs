@@ -31,7 +31,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -86,14 +86,18 @@ public class H2Connector implements DatabaseConnector {
 
 				dataSource.setDriverClassName("org.h2.Driver");
 				if (multiuser) {
-					dataSource.setUrl("jdbc:h2:" + path + ";AUTO_SERVER=TRUE");
+					dataSource.setUrl("jdbc:h2:" + "./" + path
+							+ ";AUTO_SERVER=TRUE");
 				} else {
-					dataSource.setUrl("jdbc:h2:" + path);
+					dataSource.setUrl("jdbc:h2:" + "./" + path);
 				}
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
+				// dataSource.setMaxActive(1000);
+				// dataSource.setMaxWait(10000);
+				dataSource.setMaxIdle(10000);
 				dataSource.setDefaultAutoCommit(true);
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
