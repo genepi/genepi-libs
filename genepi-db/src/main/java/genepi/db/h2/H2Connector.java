@@ -59,7 +59,9 @@ public class H2Connector implements DatabaseConnector {
 	public boolean createBackup(String folder) {
 
 		File file = new File(path + ".h2.db");
-		boolean exists = file.exists();
+		File file2 = new File(path + ".mv.db");
+		
+		boolean exists = file.exists() || file2.exists();
 
 		if (exists) {
 
@@ -76,7 +78,8 @@ public class H2Connector implements DatabaseConnector {
 	public void connect() throws SQLException {
 
 		File file = new File(path + ".h2.db");
-		exists = file.exists();
+		File file2 = new File(path + ".mv.db");
+		exists = file.exists() || file2.exists();
 
 		log.debug("Establishing connection to " + user + "@" + path);
 
