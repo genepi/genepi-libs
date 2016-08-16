@@ -912,7 +912,7 @@ public class HdfsUtil {
 			if (files != null) {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
-					if (!file.isDir()
+					if (!file.isDirectory()
 							&& !file.getPath().getName().startsWith("_")) {
 						FSDataInputStream in = fileSystem.open(path);
 						FileOutputStream out = new FileOutputStream(folder
@@ -926,6 +926,8 @@ public class HdfsUtil {
 						out.close();
 
 						in.close();
+					}else if (file.isDirectory()){
+						exportDirectory(folder, name, HdfsUtil.path(hdfs, path.getName()));
 					}
 				}
 
