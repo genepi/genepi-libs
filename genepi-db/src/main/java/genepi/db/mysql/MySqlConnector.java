@@ -29,7 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -75,8 +75,8 @@ public class MySqlConnector implements DatabaseConnector {
 								+ "?autoReconnect=true&allowMultiQueries=true&rewriteBatchedStatements=true");
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
-				//dataSource.setMaxActive(10);
-				//dataSource.setMaxWait(10000);
+				dataSource.setMaxActive(10);
+				dataSource.setMaxWait(10000);
 				dataSource.setMaxIdle(10);
 				dataSource.setDefaultAutoCommit(true);
 

@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp.BasicDataSource;
 
 public interface DatabaseConnector {
 
