@@ -54,7 +54,7 @@ public abstract class HadoopJob {
 	public HadoopJob(String name, Log log) {
 		this.log = log;
 		this.name = name;
-		configuration = new Configuration();
+		configuration = HdfsUtil.getConfiguration();
 
 		// configuration.set("mapred.child.java.opts", "-Xmx4000M");
 		configuration.set("mapred.task.timeout", "0");
@@ -62,6 +62,7 @@ public abstract class HadoopJob {
 		try {
 			fileSystem = FileSystem.get(configuration);
 		} catch (IOException e) {
+			e.printStackTrace();
 			log.error("Creating FileSystem class failed.", e);
 		}
 

@@ -21,7 +21,7 @@ public class Log {
 		this.filename = HdfsUtil.path(LogCollector.LOG_DIRECTORY, context
 				.getJobID().toString(), context.getTaskAttemptID().toString());
 
-		Configuration conf = new Configuration();
+		Configuration conf = HdfsUtil.getConfiguration();
 		try {
 
 			FileSystem fileSystem = FileSystem.get(conf);

@@ -908,7 +908,7 @@ public class HdfsUtil {
 			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
 			FileStatus[] files = fileSystem.listStatus(pathFolder);
-
+			System.out.println("export folder " + hdfs);
 			if (files != null) {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
@@ -917,7 +917,7 @@ public class HdfsUtil {
 						FSDataInputStream in = fileSystem.open(path);
 						FileOutputStream out = new FileOutputStream(folder
 								+ "/" + path.getName());
-
+						System.out.println("  export file " + path);
 						int len;
 						while ((len = in.read(buf)) > 0) {
 							out.write(buf, 0, len);

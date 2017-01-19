@@ -7,6 +7,8 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import genepi.hadoop.HdfsUtil;
+
 public class HdfsLineWriter {
 
 	private FSDataOutputStream out;
@@ -15,7 +17,7 @@ public class HdfsLineWriter {
 
 	public HdfsLineWriter(String filename) throws IOException {
 
-		Configuration configuration = new Configuration();
+		Configuration configuration = HdfsUtil.getConfiguration();
 		FileSystem filesystem = FileSystem.get(configuration);
 
 		out = filesystem.create(new Path(filename));

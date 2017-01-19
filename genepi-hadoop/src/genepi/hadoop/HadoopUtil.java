@@ -114,7 +114,7 @@ public class HadoopUtil {
 		RunningJob result = null;
 		try {
 			JobStatus[] activeJobs = client.getAllJobs();
-
+			if (activeJobs != null){
 			for (JobStatus js : activeJobs) {
 				if (js.getJobID().equals(JobID.forName(id))) {
 					result = client.getJob(js.getJobID());
@@ -123,7 +123,7 @@ public class HadoopUtil {
 			}
 
 			return result;
-
+			}
 		} catch (IOException e) {
 			log.error("Get Job failed.", e);
 
