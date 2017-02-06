@@ -38,11 +38,12 @@ public class FileUtil {
 		return names;
 	}
 
-	public static void createDirectory(String dir) {
+	public static boolean createDirectory(String dir) {
 		File output = new File(dir);
 		if (!output.exists()) {
-			output.mkdirs();
+			return output.mkdirs();
 		}
+		return true;
 	}
 
 	public static boolean copyDirectory(String source, String target) {
