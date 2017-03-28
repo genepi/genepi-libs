@@ -6,22 +6,34 @@ import java.util.Vector;
 public class ImporterFactory {
 
 	public static boolean needsImport(String url) {
-		return url.startsWith("sftp://") || url.startsWith("http://")
-				|| url.startsWith("https://") || url.startsWith("ftp://");
+		return url.startsWith("sftp://") || url.startsWith("http://") || url.startsWith("https://")
+				|| url.startsWith("ftp://");
 	}
 
 	public static IImporter createImporter(String url, String target) {
-
+		System.out.println("Target foldeR: " + target);
 		if (url.startsWith("sftp://")) {
-			return new ImporterSftp(url, target);
+			if (target.startsWith("hdfs://")) {
+				return new HdfsImporterSftp(url, target);
+			} else {
+				return new LocalImporterSftp(url, target);
+			}
 		}
 
 		if (url.startsWith("http://") || url.startsWith("https://")) {
-			return new ImporterHttp(url, target);
+			if (target.startsWith("hdfs://")) {
+				return new HdfsImporterHttp(url, target);
+			} else {
+				return new LocalImporterHttp(url, target);
+			}
 		}
 
 		if (url.startsWith("ftp://")) {
-			return new ImporterFtp(url, target);
+			if (target.startsWith("hdfs://")) {
+				return new HdfsImporterFtp(url, target);
+			} else {
+				return new LocalImporterFtp(url, target);
+			}
 		}
 
 		return null;

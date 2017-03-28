@@ -18,7 +18,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-public class ImporterFtp implements IImporter {
+public class HdfsImporterFtp implements IImporter {
 
 	private String server;
 
@@ -34,7 +34,7 @@ public class ImporterFtp implements IImporter {
 
 	private String error;
 
-	public ImporterFtp(String url, String path) {
+	public HdfsImporterFtp(String url, String path) {
 		this.server = url.split(";")[0];
 		if (url.split(";").length > 1) {
 			this.username = url.split(";")[1].trim();

@@ -3,6 +3,7 @@ package genepi.hadoop.importer;
 import genepi.hadoop.HdfsUtil;
 
 import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -12,13 +13,10 @@ import java.util.Vector;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.CountingOutputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 
-public class ImporterHttp implements IImporter {
+public class LocalImporterHttp implements IImporter {
 
 	private String url;
 
@@ -28,7 +26,7 @@ public class ImporterHttp implements IImporter {
 
 	private String error;
 
-	public ImporterHttp(String url, String path) {
+	public LocalImporterHttp(String url, String path) {
 
 		this.url = url.split(";")[0];
 		this.path = path;
@@ -39,8 +37,7 @@ public class ImporterHttp implements IImporter {
 
 		try {
 			URL webUrl = new URL(url);
-			HttpURLConnection conn = (HttpURLConnection) webUrl
-					.openConnection();
+			HttpURLConnection conn = (HttpURLConnection) webUrl.openConnection();
 			return conn.getContentLength();
 
 		} catch (MalformedURLException e) {
@@ -63,8 +60,7 @@ public class ImporterHttp implements IImporter {
 	public boolean importFiles(String extension) {
 
 		try {
-			FileSystem fileSystem = HdfsUtil.getFileSystem();
-			return importIntoHdfs(url, fileSystem, path);
+			return importIntoLocal(url, path);
 		} catch (IOException e) {
 			error = e.getMessage();
 			return false;
@@ -72,8 +68,7 @@ public class ImporterHttp implements IImporter {
 
 	}
 
-	public boolean importIntoHdfs(String weburl, FileSystem fileSystem,
-			String path) throws IOException {
+	public boolean importIntoLocal(String weburl, String path) throws IOException {
 
 		URL url = new URL(weburl);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -86,14 +81,15 @@ public class ImporterHttp implements IImporter {
 
 		String target = HdfsUtil.path(path, name);
 
-		FSDataOutputStream out = fileSystem.create(new Path(target));
+		System.out.println("target: " + target);
+		FileOutputStream out = new FileOutputStream(target);
 
 		t = new CountingOutputStream(out);
 
-		IOUtils.copyBytes(in, t, fileSystem.getConf());
+		IOUtils.copyLarge(in, t);
 
-		IOUtils.closeStream(in);
-		IOUtils.closeStream(out);
+		in.close();
+		out.close();
 
 		return true;
 	}

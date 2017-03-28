@@ -20,7 +20,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
-public class ImporterSftp implements IImporter {
+public class HdfsImporterSftp implements IImporter {
 
 	private String server;
 
@@ -38,7 +38,7 @@ public class ImporterSftp implements IImporter {
 
 	private String error;
 
-	public ImporterSftp(String url, String path) {
+	public HdfsImporterSftp(String url, String path) {
 
 		this.server = url.split(";")[0];
 		if (url.split(";").length > 1) {
