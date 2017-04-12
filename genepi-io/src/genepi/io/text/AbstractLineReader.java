@@ -14,7 +14,7 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 
 	private String filename;
 
-	private BufferedReader in;
+	protected BufferedReader in;
 
 	private String line;
 

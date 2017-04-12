@@ -36,6 +36,8 @@ public class LegendFileReader extends AbstractLineReader<String> {
 	private int a0Col = -1;
 	private int a1Col = -1;
 	private int popCol = -1;
+	
+	private int oldPosition = 0;
 
 	public LegendFileReader(DataInputStream inputStream) throws IOException {
 		super(inputStream);
@@ -134,7 +136,7 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 		Integer offset = index.get(position);
 		if (offset != null) {
-
+if (oldPosition != position){
 			myIn.skip(offset - oldOffset);
 			String line = myIn.readLine();
 			oldOffset = offset + line.length() + 1;
@@ -154,7 +156,8 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 			entry.setFrequencyA(1 - aaf);
 			entry.setFrequencyB(aaf);
-
+			oldPosition = position;
+		}
 			return entry;
 
 		} else {
