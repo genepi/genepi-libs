@@ -27,11 +27,9 @@ public abstract class WorkflowContext {
 
 	public abstract String getWorkingDirectory();
 
-	public abstract boolean sendMail(String subject, String body)
-			throws Exception;
-	
-	public abstract boolean sendMail(String to, String subject, String body)
-			throws Exception;	
+	public abstract boolean sendMail(String subject, String body) throws Exception;
+
+	public abstract boolean sendMail(String to, String subject, String body) throws Exception;
 
 	public abstract Set<String> getInputs();
 
@@ -46,8 +44,13 @@ public abstract class WorkflowContext {
 	public abstract Map<String, Integer> getCounters();
 
 	public abstract Object getData(String key);
-	
+
 	public abstract String createLinkToFile(String id);
+
+	public String createLinkToFile(String id, String filename) {
+		return "[NOT AVAILABLE]";
+
+	}
 
 	public abstract String getJobName();
 

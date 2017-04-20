@@ -124,6 +124,12 @@ public class CommandLineContext extends WorkflowContext {
 	}
 
 	@Override
+	public String createLinkToFile(String id, String filename) {
+		// TODO Auto-generated method stub
+		return "[NOT AVAILABLE]";
+	}
+	
+	@Override
 	public String getJobName() {
 		return jobId;
 	}
