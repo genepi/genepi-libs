@@ -21,7 +21,7 @@ public class ImporterFactory {
 		}
 
 		if (url.startsWith("http://") || url.startsWith("https://")) {
-			if (target.startsWith("hdfs://")) {
+			if (target != null && target.startsWith("hdfs://")) {
 				return new HdfsImporterHttp(url, target);
 			} else {
 				return new LocalImporterHttp(url, target);
