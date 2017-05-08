@@ -13,7 +13,7 @@ public class ImporterFactory {
 	public static IImporter createImporter(String url, String target) {
 		System.out.println("Target foldeR: " + target);
 		if (url.startsWith("sftp://")) {
-			if (target.startsWith("hdfs://")) {
+			if (target != null && target.startsWith("hdfs://")) {
 				return new HdfsImporterSftp(url, target);
 			} else {
 				return new LocalImporterSftp(url, target);
@@ -21,7 +21,7 @@ public class ImporterFactory {
 		}
 
 		if (url.startsWith("http://") || url.startsWith("https://")) {
-			if (target != null && target.startsWith("hdfs://")) {
+			if (target !=null && target.startsWith("hdfs://")) {
 				return new HdfsImporterHttp(url, target);
 			} else {
 				return new LocalImporterHttp(url, target);
