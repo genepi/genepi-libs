@@ -12,6 +12,8 @@ public class CommandLineContext extends WorkflowContext {
 
 	private String jobId;
 
+	private Map<String, String> config;
+
 	public CommandLineContext(String[] args) throws Exception {
 
 		params = new HashMap<String, String>();
@@ -73,11 +75,10 @@ public class CommandLineContext extends WorkflowContext {
 	}
 
 	@Override
-	public boolean sendMail(String to, String subject, String body)
-			throws Exception {
+	public boolean sendMail(String to, String subject, String body) throws Exception {
 		return false;
 	}
-	
+
 	@Override
 	public Set<String> getInputs() {
 		return params.keySet();
@@ -128,7 +129,7 @@ public class CommandLineContext extends WorkflowContext {
 		// TODO Auto-generated method stub
 		return "[NOT AVAILABLE]";
 	}
-	
+
 	@Override
 	public String getJobName() {
 		return jobId;
@@ -179,6 +180,20 @@ public class CommandLineContext extends WorkflowContext {
 	@Override
 	public void endTask(String message, int type) {
 		message(message, type);
+	}
+
+	@Override
+	public void setConfig(Map<String, String> config) {
+		this.config = config;
+	}
+
+	@Override
+	public String getConfig(String param) {
+		if (config != null) {
+			return config.get(param);
+		} else {
+			return null;
+		}
 	}
 
 }

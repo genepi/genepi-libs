@@ -16,6 +16,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -33,23 +36,21 @@ public class HdfsUtil {
 
 	static Configuration defaultConfiguration = new Configuration();
 
-	public static void setDefaultConfiguration(
-			Configuration defaultConfiguration) {
+	public static void setDefaultConfiguration(Configuration defaultConfiguration) {
 		HdfsUtil.defaultConfiguration = defaultConfiguration;
 	}
 
 	public static Configuration getConfiguration() {
 		return new Configuration(defaultConfiguration);
 	}
-	
+
 	public static FileSystem getFileSystem() throws IOException {
 		Configuration configuration = getConfiguration();
 		FileSystem fileSystem = FileSystem.get(configuration);
 		return fileSystem;
 	}
 
-	public static void get(String hdfs, String filename,
-			Configuration configuration) throws IOException {
+	public static void get(String hdfs, String filename, Configuration configuration) throws IOException {
 
 		FileSystem fileSystem = FileSystem.get(configuration);
 		Path path = new Path(hdfs);
@@ -57,8 +58,7 @@ public class HdfsUtil {
 		if (fileSystem.isDirectory(path)) {
 
 			// merge
-			DataOutputStream fos = new DataOutputStream(new FileOutputStream(
-					filename));
+			DataOutputStream fos = new DataOutputStream(new FileOutputStream(filename));
 			FileStatus[] files = fileSystem.listStatus(new Path(hdfs));
 
 			for (FileStatus file : files) {
@@ -100,8 +100,7 @@ public class HdfsUtil {
 
 	}
 
-	public static void getFolder(String hdfs, String filename,
-			Configuration configuration) throws IOException {
+	public static void getFolder(String hdfs, String filename, Configuration configuration) throws IOException {
 
 		FileSystem fileSystem = FileSystem.get(configuration);
 		Path path = new Path(hdfs);
@@ -113,8 +112,7 @@ public class HdfsUtil {
 		for (FileStatus file : files) {
 			if (!file.isDir()) {
 				DataOutputStream fos = new DataOutputStream(
-						new FileOutputStream(filename + "/"
-								+ file.getPath().getName()));
+						new FileOutputStream(filename + "/" + file.getPath().getName()));
 				FSDataInputStream is = fileSystem.open(file.getPath());
 				byte[] readData = new byte[1024];
 				int i = is.read(readData);
@@ -126,16 +124,14 @@ public class HdfsUtil {
 				fos.close();
 
 			} else {
-				getFolder(HdfsUtil.path(hdfs, file.getPath().getName()),
-						filename + "/" + file.getPath().getName(),
+				getFolder(HdfsUtil.path(hdfs, file.getPath().getName()), filename + "/" + file.getPath().getName(),
 						configuration);
 			}
 		}
 
 	}
 
-	public static void getFolder(String hdfs, String filename)
-			throws IOException {
+	public static void getFolder(String hdfs, String filename) throws IOException {
 		Configuration configuration = getConfiguration();
 		getFolder(hdfs, filename, configuration);
 	}
@@ -171,8 +167,7 @@ public class HdfsUtil {
 			Path pathTarget = new Path(target);
 			FileSystem fileSystem = FileSystem.get(conf);
 
-			return FileUtil.copy(fileSystem, pathSource, fileSystem,
-					pathTarget, false, conf);
+			return FileUtil.copy(fileSystem, pathSource, fileSystem, pathTarget, false, conf);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -196,8 +191,7 @@ public class HdfsUtil {
 
 				File[] files = file.listFiles();
 				for (File subFile : files) {
-					put(subFile.getPath(),
-							HdfsUtil.path(target, subFile.getName()));
+					put(subFile.getPath(), HdfsUtil.path(target, subFile.getName()));
 				}
 
 			} else {
@@ -256,15 +250,13 @@ public class HdfsUtil {
 		return result;
 	}
 
-	public static void getAsZip(String zipFile, String hdfs, boolean merge,
-			Configuration configuration) {
+	public static void getAsZip(String zipFile, String hdfs, boolean merge, Configuration configuration) {
 		// Create a buffer for reading the files
 		byte[] buf = new byte[1024];
 
 		try {
 			// Create the ZIP file
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
-					zipFile));
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
 
 			// Compress the files
 
@@ -314,14 +306,12 @@ public class HdfsUtil {
 		getAsZip(zipFile, hdfs, merge, configuration);
 	}
 
-	public static void putZip(String filename, String folder,
-			Configuration configuration) {
+	public static void putZip(String filename, String folder, Configuration configuration) {
 		try {
 
 			FileSystem filesystem = FileSystem.get(configuration);
 
-			ZipInputStream zipinputstream = new ZipInputStream(
-					new FileInputStream(filename));
+			ZipInputStream zipinputstream = new ZipInputStream(new FileInputStream(filename));
 
 			byte[] buf = new byte[1024];
 			ZipEntry zipentry = zipinputstream.getNextEntry();
@@ -333,8 +323,7 @@ public class HdfsUtil {
 				if (!zipentry.isDirectory()) {
 					String target = HdfsUtil.path(folder, entryName);
 
-					FSDataOutputStream out = filesystem
-							.create(new Path(target));
+					FSDataOutputStream out = filesystem.create(new Path(target));
 
 					int n;
 					while ((n = zipinputstream.read(buf, 0, 1024)) > -1)
@@ -346,9 +335,54 @@ public class HdfsUtil {
 
 				zipentry = zipinputstream.getNextEntry();
 
-			}// while
+			} // while
 
 			zipinputstream.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void putTarGz(String filename, String folder) {
+		Configuration configuration = getConfiguration();
+		putTarGz(filename, folder, configuration);
+	}
+
+	public static void putTarGz(String filename, String folder, Configuration configuration) {
+
+		int BUFFER_SIZE = 1024;
+
+		try {
+
+			FileSystem filesystem = FileSystem.get(configuration);
+
+			GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(new FileInputStream(filename));
+			TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn);
+
+			TarArchiveEntry entry;
+
+			while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
+				// for each entry to be extracted
+				String entryName = entry.getName();
+
+				if (!entry.isDirectory()) {
+					String target = HdfsUtil.path(folder, entryName);
+
+					FSDataOutputStream out = filesystem.create(new Path(target));
+
+					int count;
+					byte data[] = new byte[BUFFER_SIZE];
+					while ((count = tarIn.read(data, 0, BUFFER_SIZE)) != -1) {
+						out.write(data, 0, count);
+					}
+					out.close();
+
+				}
+
+			}
+
+			tarIn.close();
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -360,21 +394,18 @@ public class HdfsUtil {
 		putZip(filename, folder, configuration);
 	}
 
-	public static void mergeAndGz(String local, String hdfs,
-			boolean removeHeader, String ext) throws FileNotFoundException,
-			IOException {
+	public static void mergeAndGz(String local, String hdfs, boolean removeHeader, String ext)
+			throws FileNotFoundException, IOException {
 		GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(local));
 		merge(out, hdfs, removeHeader, ext);
 	}
 
-	public static void merge(String local, String hdfs, boolean removeHeader)
-			throws IOException {
+	public static void merge(String local, String hdfs, boolean removeHeader) throws IOException {
 		FileOutputStream out = new FileOutputStream(local);
 		merge(out, hdfs, removeHeader, null);
 	}
 
-	public static void merge(OutputStream out, String hdfs,
-			boolean removeHeader, String ext) throws IOException {
+	public static void merge(OutputStream out, String hdfs, boolean removeHeader, String ext) throws IOException {
 
 		FileSystem fileSystem = getFileSystem();
 		Path pathFolder = new Path(hdfs);
@@ -386,10 +417,8 @@ public class HdfsUtil {
 
 			// filters by extension and sorts by filename
 			for (FileStatus file : files) {
-				if (!file.isDir()
-						&& !file.getPath().getName().startsWith("_")
-						&& (ext == null || file.getPath().getName()
-								.endsWith(ext))) {
+				if (!file.isDir() && !file.getPath().getName().startsWith("_")
+						&& (ext == null || file.getPath().getName().endsWith(ext))) {
 					filenames.add(file.getPath().toString());
 				}
 			}
@@ -449,8 +478,7 @@ public class HdfsUtil {
 
 	}
 
-	public static void join(String local, String hdfs, int offset,
-			String delimiter, String ext) {
+	public static void join(String local, String hdfs, int offset, String delimiter, String ext) {
 		try {
 			FileOutputStream out = new FileOutputStream(local);
 			join(out, hdfs, offset, delimiter, ext);
@@ -459,11 +487,9 @@ public class HdfsUtil {
 		}
 	}
 
-	public static void joinAndGz(String local, String hdfs, int offset,
-			String delimiter, String ext) {
+	public static void joinAndGz(String local, String hdfs, int offset, String delimiter, String ext) {
 		try {
-			GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(
-					local));
+			GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(local));
 			join(out, hdfs, offset, delimiter, ext);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -472,8 +498,7 @@ public class HdfsUtil {
 		}
 	}
 
-	public static void join(OutputStream out, String hdfs, int offset,
-			String delimiter, String ext) {
+	public static void join(OutputStream out, String hdfs, int offset, String delimiter, String ext) {
 
 		try {
 
@@ -487,10 +512,8 @@ public class HdfsUtil {
 
 				// filters by extension and sorts by filename
 				for (FileStatus file : files) {
-					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")
-							&& (ext == null || file.getPath().getName()
-									.endsWith(ext))) {
+					if (!file.isDir() && !file.getPath().getName().startsWith("_")
+							&& (ext == null || file.getPath().getName().endsWith(ext))) {
 						filenames.add(file.getPath().toString());
 					}
 				}
@@ -498,8 +521,7 @@ public class HdfsUtil {
 
 				Text line = new Text();
 
-				FSDataInputStream[] streams = new FSDataInputStream[filenames
-						.size()];
+				FSDataInputStream[] streams = new FSDataInputStream[filenames.size()];
 				LineReader[] readers = new LineReader[filenames.size()];
 				boolean[] empty = new boolean[filenames.size()];
 				for (int i = 0; i < filenames.size(); i++) {
@@ -569,10 +591,8 @@ public class HdfsUtil {
 		try {
 			FileSystem fileSystem = getFileSystem();
 
-			FsPermission other = fileSystem.getFileStatus(new Path(filename))
-					.getPermission();
-			FsPermission permission = new FsPermission(FsAction.ALL,
-					other.getGroupAction(), other.getOtherAction());
+			FsPermission other = fileSystem.getFileStatus(new Path(filename)).getPermission();
+			FsPermission permission = new FsPermission(FsAction.ALL, other.getGroupAction(), other.getOtherAction());
 			fileSystem.setPermission(new Path(filename), permission);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -583,8 +603,7 @@ public class HdfsUtil {
 		try {
 			FileSystem fileSystem = getFileSystem();
 
-			FsPermission permission = fileSystem.getFileStatus(
-					new Path(filename)).getPermission();
+			FsPermission permission = fileSystem.getFileStatus(new Path(filename)).getPermission();
 			return permission.getUserAction().implies(FsAction.EXECUTE);
 
 		} catch (IOException e) {
@@ -597,8 +616,7 @@ public class HdfsUtil {
 		try {
 			FileSystem fileSystem = getFileSystem();
 
-			FsPermission permission = fileSystem.getFileStatus(path)
-					.getPermission();
+			FsPermission permission = fileSystem.getFileStatus(path).getPermission();
 			return permission.getUserAction().implies(FsAction.EXECUTE);
 
 		} catch (IOException e) {
@@ -625,8 +643,7 @@ public class HdfsUtil {
 
 	}
 
-	public static List<String> getFiles(String hdfs, String ext)
-			throws IOException {
+	public static List<String> getFiles(String hdfs, String ext) throws IOException {
 
 		FileSystem fileSystem = getFileSystem();
 		Path pathFolder = new Path(hdfs);
@@ -638,10 +655,8 @@ public class HdfsUtil {
 
 			// filters by extension and sorts by filename
 			for (FileStatus file : files) {
-				if (!file.isDir()
-						&& !file.getPath().getName().startsWith("_")
-						&& (ext == null || file.getPath().getName()
-								.endsWith(ext))) {
+				if (!file.isDir() && !file.getPath().getName().startsWith("_")
+						&& (ext == null || file.getPath().getName().endsWith(ext))) {
 					filenames.add(file.getPath().toString());
 				}
 			}
@@ -711,8 +726,7 @@ public class HdfsUtil {
 
 		try {
 			// Create the ZIP file
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
-					zipFile));
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
 
 			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
@@ -721,8 +735,7 @@ public class HdfsUtil {
 			if (files != null) {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
-					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")) {
+					if (!file.isDir() && !file.getPath().getName().startsWith("_")) {
 						FSDataInputStream in = fileSystem.open(path);
 						out.putNextEntry(new ZipEntry(path.getName()));
 
@@ -747,13 +760,11 @@ public class HdfsUtil {
 		}
 	}
 
-	public static void compressAndMerge(String zipFile, String hdfs,
-			boolean removeHeader) {
+	public static void compressAndMerge(String zipFile, String hdfs, boolean removeHeader) {
 
 		try {
 			// Create the ZIP file
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
-					zipFile));
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
 
 			FileSystem fileSystem = getFileSystem();
 			Path pathFolder = new Path(hdfs);
@@ -770,10 +781,8 @@ public class HdfsUtil {
 
 				for (FileStatus file : files) {
 					Path path = file.getPath();
-					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")
-							&& !file.getPath().getName()
-									.startsWith(".pig_schema")) {
+					if (!file.isDir() && !file.getPath().getName().startsWith("_")
+							&& !file.getPath().getName().startsWith(".pig_schema")) {
 						FSDataInputStream in = fileSystem.open(path);
 
 						LineReader reader = new LineReader(in);
@@ -826,8 +835,7 @@ public class HdfsUtil {
 		}
 	}
 
-	public static void exportDirectoryAndMerge(String folder, String name,
-			String hdfs, boolean removeHeader) {
+	public static void exportDirectoryAndMerge(String folder, String name, String hdfs, boolean removeHeader) {
 
 		try {
 			FileOutputStream out = null;
@@ -844,10 +852,8 @@ public class HdfsUtil {
 				boolean firstFile = true;
 				for (FileStatus file : files) {
 					Path path = file.getPath();
-					if (!file.isDir()
-							&& !file.getPath().getName().startsWith("_")
-							&& !file.getPath().getName()
-									.startsWith(".pig_schema")) {
+					if (!file.isDir() && !file.getPath().getName().startsWith("_")
+							&& !file.getPath().getName().startsWith(".pig_schema")) {
 						FSDataInputStream in = fileSystem.open(path);
 
 						LineReader reader = new LineReader(in);
@@ -912,11 +918,9 @@ public class HdfsUtil {
 			if (files != null) {
 				for (FileStatus file : files) {
 					Path path = file.getPath();
-					if (!file.isDirectory()
-							&& !file.getPath().getName().startsWith("_")) {
+					if (!file.isDirectory() && !file.getPath().getName().startsWith("_")) {
 						FSDataInputStream in = fileSystem.open(path);
-						FileOutputStream out = new FileOutputStream(folder
-								+ "/" + path.getName());
+						FileOutputStream out = new FileOutputStream(folder + "/" + path.getName());
 						System.out.println("  export file " + path);
 						int len;
 						while ((len = in.read(buf)) > 0) {
@@ -926,7 +930,7 @@ public class HdfsUtil {
 						out.close();
 
 						in.close();
-					}else if (file.isDirectory()){
+					} else if (file.isDirectory()) {
 						exportDirectory(folder, name, HdfsUtil.path(hdfs, path.getName()));
 					}
 				}
@@ -948,8 +952,7 @@ public class HdfsUtil {
 			Path path = new Path(hdfs);
 
 			FSDataInputStream in = fileSystem.open(path);
-			FileOutputStream out = new FileOutputStream(folder + "/"
-					+ path.getName());
+			FileOutputStream out = new FileOutputStream(folder + "/" + path.getName());
 
 			int len;
 			while ((len = in.read(buf)) > 0) {
@@ -978,8 +981,7 @@ public class HdfsUtil {
 			FSDataInputStream in = fileSystem.open(path);
 
 			// Create the ZIP file
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(
-					folder + "/" + path.getName() + ".zip"));
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(folder + "/" + path.getName() + ".zip"));
 
 			out.putNextEntry(new ZipEntry(path.getName()));
 
@@ -1000,8 +1002,7 @@ public class HdfsUtil {
 		}
 	}
 
-	public static boolean createDirectory(FileSystem fileSystem,
-			String directory) {
+	public static boolean createDirectory(FileSystem fileSystem, String directory) {
 		Path path = new Path(directory);
 		try {
 			fileSystem.mkdirs(path);
@@ -1021,8 +1022,7 @@ public class HdfsUtil {
 		return false;
 	}
 
-	public static boolean rename(FileSystem fileSystem, String oldPath,
-			String newPath) {
+	public static boolean rename(FileSystem fileSystem, String oldPath, String newPath) {
 		Path old = new Path(oldPath);
 		Path newP = new Path(newPath);
 		try {
@@ -1043,8 +1043,7 @@ public class HdfsUtil {
 		return false;
 	}
 
-	public static void checkOut(String hdfs, String filename)
-			throws IOException {
+	public static void checkOut(String hdfs, String filename) throws IOException {
 
 		FileSystem fileSystem = getFileSystem();
 		Path path = new Path(hdfs);
@@ -1052,8 +1051,7 @@ public class HdfsUtil {
 		if (fileSystem.isDirectory(path)) {
 
 			// merge
-			DataOutputStream fos = new DataOutputStream(new FileOutputStream(
-					filename));
+			DataOutputStream fos = new DataOutputStream(new FileOutputStream(filename));
 
 			Path headerPath = new Path(hdfs + "/.pig_header");
 

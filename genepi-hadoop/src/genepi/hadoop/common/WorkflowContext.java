@@ -57,7 +57,11 @@ public abstract class WorkflowContext {
 	public abstract String getHdfsTemp();
 
 	public abstract String getLocalTemp();
-
+	
+	public abstract void setConfig(Map<String, String> config);
+	
+	public abstract String getConfig(String param);
+	
 	public abstract void message(String message, int type);
 
 	public void ok(String message) {
