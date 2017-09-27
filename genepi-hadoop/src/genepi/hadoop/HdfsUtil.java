@@ -470,12 +470,40 @@ public class HdfsUtil {
 				line.clear();
 
 				in.close();
+				
+				reader.close();
 
 			}
 
 			out.close();
 		}
 
+	}
+	
+	public static void mergeFolderBinary(String local, String hdfs) throws IOException {
+		
+		mergeFolderBinary(local, hdfs, null);
+	}
+	
+	public static void mergeFolderBinary(String localFile, String hdfs, String header) throws IOException {
+		
+		List<String> files = HdfsUtil.getFiles(hdfs);
+		FileOutputStream out = new FileOutputStream(localFile);
+
+		if(header !=null){
+		out.write(new String(header).getBytes());
+		out.write("\n".getBytes());
+		}
+		
+		for(String file: files){
+		DataInputStream in = HdfsUtil.open(file);
+		org.apache.commons.compress.utils.IOUtils.copy(in, out);
+		in.close();
+		}
+		
+		out.close();
+		
+		
 	}
 
 	public static void join(String local, String hdfs, int offset, String delimiter, String ext) {
@@ -822,6 +850,8 @@ public class HdfsUtil {
 						line.clear();
 
 						in.close();
+						
+						reader.close();
 
 					}
 				}
@@ -893,6 +923,8 @@ public class HdfsUtil {
 						line.clear();
 
 						in.close();
+						
+						reader.close();
 					}
 				}
 

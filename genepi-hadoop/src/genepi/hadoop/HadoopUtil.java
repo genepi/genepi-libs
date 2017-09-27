@@ -37,9 +37,8 @@ public class HadoopUtil {
 	}
 
 	private HadoopUtil() {
-		JobConf job = new JobConf(HadoopUtil.class);
 		try {
-			client = new JobClient(job);
+			client = new JobClient(HdfsUtil.getConfiguration());
 		} catch (IOException e) {
 			log.error("JobClient init failed.", e);
 		}
