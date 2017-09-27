@@ -36,8 +36,10 @@ public class LegendFileReader extends AbstractLineReader<String> {
 	private int a0Col = -1;
 	private int a1Col = -1;
 	private int popCol = -1;
-	
+
 	private int oldPosition = 0;
+
+	private String oldLine = null;
 
 	public LegendFileReader(DataInputStream inputStream) throws IOException {
 		super(inputStream);
@@ -52,6 +54,8 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 		int offset = 0;
 
+		int oldPosition = -1;
+
 		while (next()) {
 			String line = get();
 			if (!line.startsWith("id")) {
@@ -65,6 +69,11 @@ public class LegendFileReader extends AbstractLineReader<String> {
 
 				index.put(position, offset);
 
+				if (oldPosition > position) {
+					throw new IOException("Legend File is not sorted.");
+				}
+
+				oldPosition = position;
 			} else {
 
 				// parse header
@@ -101,45 +110,17 @@ public class LegendFileReader extends AbstractLineReader<String> {
 		return line;
 	}
 
-	public String findByPosition(int position) throws IOException {
-
-		// ignore duplicates
-		if (duplicates.contains(position)) {
-			return null;
-		}
-
-		Integer offset = index.get(position);
-		if (offset != null) {
-
-			FileInputStream inputStream = new FileInputStream(getFilename());
-			InputStream in2 = FileUtil.decompressStream(inputStream);
-			BufferedReader in = new BufferedReader(new InputStreamReader(in2));
-			in.skip(offset);
-			String line = in.readLine();
-			in.close();
-			return line;
-
-		} else {
-
-			return null;
-
-		}
-	}
-
 	public void initSearch() throws IOException {
 		FileInputStream inputStream = new FileInputStream(getFilename());
 		InputStream in2 = FileUtil.decompressStream(inputStream);
 		myIn = new BufferedReader(new InputStreamReader(in2));
 	}
 
-	public LegendEntry findByPosition2(int position) throws IOException {
+	public LegendEntry findByPosition(int position) throws IOException {
 
-		Integer offset = index.get(position);
-		if (offset != null) {
-if (oldPosition != position){
-			myIn.skip(offset - oldOffset);
-			String line = myIn.readLine();
-			oldOffset = offset + line.length() + 1;
+		String line = findLineByPosition(position);
+
+		if (line != null) {
 
 			String[] tiles = line.split(" ");
 
@@ -156,9 +137,33 @@ if (oldPosition != position){
 
 			entry.setFrequencyA(1 - aaf);
 			entry.setFrequencyB(aaf);
-			oldPosition = position;
-		}
+
 			return entry;
+
+		} else {
+
+			return null;
+
+		} 
+	}
+
+	public String findLineByPosition(int position) throws IOException {
+		Integer offset = index.get(position);
+		if (offset != null) {
+			if (oldPosition != position) {
+				try {
+					myIn.skip(offset - oldOffset);
+					String line = myIn.readLine();
+					oldOffset = offset + line.length() + 1;
+					oldLine = line;
+					oldPosition = position;
+					return line;
+				} catch (Exception e) {
+					throw new IOException("Problem reading position '" + position + "' [Old position: " + oldPosition
+							+ ", OldOffset" + oldOffset + ", New Offset" + offset + "]");
+				}
+			}
+			return oldLine;
 
 		} else {
 
