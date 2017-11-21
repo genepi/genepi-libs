@@ -78,6 +78,11 @@ public class CommandLineContext extends WorkflowContext {
 	public boolean sendMail(String to, String subject, String body) throws Exception {
 		return false;
 	}
+	
+	@Override
+	public boolean sendNotification(String body) throws Exception {
+		return false;
+	}
 
 	@Override
 	public Set<String> getInputs() {
