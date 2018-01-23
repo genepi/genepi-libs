@@ -48,8 +48,7 @@ public class H2Connector implements DatabaseConnector {
 	private boolean multiuser = false;
 	private boolean exists = false;
 
-	public H2Connector(String path, String user, String password,
-			boolean multiuser) {
+	public H2Connector(String path, String user, String password, boolean multiuser) {
 		this.path = path;
 		this.user = user;
 		this.password = password;
@@ -60,7 +59,7 @@ public class H2Connector implements DatabaseConnector {
 
 		File file = new File(path + ".h2.db");
 		File file2 = new File(path + ".mv.db");
-		
+
 		boolean exists = file.exists() || file2.exists();
 
 		if (exists) {
@@ -88,11 +87,18 @@ public class H2Connector implements DatabaseConnector {
 				dataSource = new BasicDataSource();
 
 				dataSource.setDriverClassName("org.h2.Driver");
-				if (multiuser) {
-					dataSource.setUrl("jdbc:h2:" + "./" + path
-							+ ";AUTO_SERVER=TRUE");
+
+				String newPath = path;
+				if (!path.startsWith("/")) {
+					newPath = "./" + path;
 				} else {
-					dataSource.setUrl("jdbc:h2:" + "./" + path);
+					newPath = path;
+				}
+
+				if (multiuser) {
+					dataSource.setUrl("jdbc:h2:" + newPath + ";AUTO_SERVER=TRUE");
+				} else {
+					dataSource.setUrl("jdbc:h2:" + newPath);
 				}
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
@@ -120,8 +126,7 @@ public class H2Connector implements DatabaseConnector {
 		return !exists;
 	}
 
-	public void executeSQL(InputStream is) throws SQLException, IOException,
-			URISyntaxException {
+	public void executeSQL(InputStream is) throws SQLException, IOException, URISyntaxException {
 
 		String sqlContent = readFileAsString(is);
 		if (!sqlContent.isEmpty()) {
@@ -132,8 +137,7 @@ public class H2Connector implements DatabaseConnector {
 		}
 	}
 
-	public static String readFileAsString(InputStream is)
-			throws java.io.IOException, URISyntaxException {
+	public static String readFileAsString(InputStream is) throws java.io.IOException, URISyntaxException {
 
 		DataInputStream in = new DataInputStream(is);
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
