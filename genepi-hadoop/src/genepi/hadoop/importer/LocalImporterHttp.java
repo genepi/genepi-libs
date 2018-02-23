@@ -38,13 +38,21 @@ public class LocalImporterHttp implements IImporter {
 		try {
 			URL webUrl = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) webUrl.openConnection();
-			return conn.getContentLength();
+			if (conn.getResponseCode() == 404){
+				error = "Url '" + url + "' not found";
+
+				return -1;
+			}
+			int size = conn.getContentLength();
+			conn.disconnect();
+			return size;
 
 		} catch (MalformedURLException e) {
-			error = e.getMessage();
+			error = "The provided url '" + url + "' is mail formed. ";
 			return -1;
-		} catch (IOException e) {
-			error = e.getMessage();
+		} catch (Exception e) {	
+			e.printStackTrace();
+			error = "The provided url '" + url + "' is not valid. ";
 			return -1;
 
 		}
@@ -81,7 +89,6 @@ public class LocalImporterHttp implements IImporter {
 
 		String target = HdfsUtil.path(path, name);
 
-		System.out.println("target: " + target);
 		FileOutputStream out = new FileOutputStream(target);
 
 		t = new CountingOutputStream(out);
@@ -96,14 +103,19 @@ public class LocalImporterHttp implements IImporter {
 
 	@Override
 	public List<FileItem> getFiles() {
-		List<FileItem> items = new Vector<FileItem>();
-		FileItem file = new FileItem();
-		file.setText(FilenameUtils.getName(url));
-		file.setPath("/");
-		file.setId("/");
-		file.setSize(FileUtils.byteCountToDisplaySize(getFileSize()));
-		items.add(file);
-		return items;
+		long size = getFileSize();
+		if (size >= 0) {
+			List<FileItem> items = new Vector<FileItem>();
+			FileItem file = new FileItem();
+			file.setText(FilenameUtils.getName(url));
+			file.setPath("/");
+			file.setId("/");
+			file.setSize(FileUtils.byteCountToDisplaySize(size));
+			items.add(file);
+			return items;
+		} else {
+			return null;
+		}
 	}
 
 	@Override

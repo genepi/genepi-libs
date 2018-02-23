@@ -11,7 +11,7 @@ public class ImporterFactory {
 	}
 
 	public static IImporter createImporter(String url, String target) {
-		System.out.println("Target foldeR: " + target);
+
 		if (url.startsWith("sftp://")) {
 			if (target != null && target.startsWith("hdfs://")) {
 				return new HdfsImporterSftp(url, target);
