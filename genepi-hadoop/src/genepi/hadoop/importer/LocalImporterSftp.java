@@ -180,8 +180,7 @@ public class LocalImporterSftp implements IImporter {
 			}
 			channelSftp.disconnect();
 		} catch (Exception e) {
-			e.printStackTrace();
-			error = e.getMessage();
+			error = "File " + workingDir + ": " + e.getMessage();
 			return false;
 		} finally {
 			session.disconnect();
@@ -266,8 +265,7 @@ public class LocalImporterSftp implements IImporter {
 			}
 			channelSftp.disconnect();
 		} catch (Exception e) {
-			e.printStackTrace();
-			error = e.getMessage();
+			error = "File " + workingDir + ": " + e.getMessage();
 			return null;
 		} finally {
 			session.disconnect();
