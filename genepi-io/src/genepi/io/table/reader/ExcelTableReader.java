@@ -59,7 +59,7 @@ public class ExcelTableReader extends AbstractTableReader {
 			columnCount = sheet.getColumns();
 			header = new String[columnCount];
 			for (int i = 0; i < columnCount; i++) {
-				header[i] = sheet.getCell(i, 0).getContents();
+				header[i] = sheet.getCell(i, 0).getContents().trim();
 				columns2Index.put(header[i], i);
 			}
 			currentRow = 0;
@@ -72,7 +72,7 @@ public class ExcelTableReader extends AbstractTableReader {
 
 	@Override
 	public int getColumnIndex(String column) {
-		return columns2Index.get(column);
+		return columns2Index.get(column.trim());
 	}
 
 	@Override

@@ -53,7 +53,7 @@ public class CsvTableReader extends AbstractTableReader {
 			}
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i], i);
+					columns2Index.put(header[i].trim(), i);
 				}
 			}
 		} catch (IOException e) {
@@ -73,7 +73,7 @@ public class CsvTableReader extends AbstractTableReader {
 			//}
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i], i);
+					columns2Index.put(header[i].trim(), i);
 				}
 			}
 		} catch (IOException e) {
@@ -92,7 +92,7 @@ public class CsvTableReader extends AbstractTableReader {
 
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i], i);
+					columns2Index.put(header[i].trim(), i);
 				}
 			}
 		} catch (IOException e) {
@@ -122,7 +122,7 @@ public class CsvTableReader extends AbstractTableReader {
 			header = newHeader;
 
 			for (int i = 0; i < header.length; i++) {
-				columns2Index.put(header[i], i);
+				columns2Index.put(header[i].trim(), i);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -131,7 +131,7 @@ public class CsvTableReader extends AbstractTableReader {
 
 	@Override
 	public int getColumnIndex(String column) {
-		return columns2Index.get(column);
+		return columns2Index.get(column.trim());
 	}
 
 	@Override
