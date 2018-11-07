@@ -22,21 +22,35 @@ package genepi.io.table.reader;
 
 import java.util.Iterator;
 
+import genepi.io.table.exceptions.ColumnNotFoundException;
+
 public abstract class AbstractTableReader implements ITableReader {
 
 	@Override
 	public int getInteger(String column) {
-		return getInteger(getColumnIndex(column));
+		if (hasColumn(column)) {
+			return getInteger(getColumnIndex(column));
+		} else {
+			throw new ColumnNotFoundException("Column " + column + " not available");
+		}
 	}
 
 	@Override
 	public String getString(String column) {
-		return getString(getColumnIndex(column));
+		if (hasColumn(column)) {
+			return getString(getColumnIndex(column));
+		} else {
+			throw new ColumnNotFoundException("Column " + column + " not available");
+		}
 	}
 
 	@Override
 	public double getDouble(String column) {
-		return getDouble(getColumnIndex(column));
+		if (hasColumn(column)) {
+			return getDouble(getColumnIndex(column));
+		} else {
+			throw new ColumnNotFoundException("Column " + column + " not available");
+		}
 	}
 
 	@Override

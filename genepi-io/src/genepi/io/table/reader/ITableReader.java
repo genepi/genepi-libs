@@ -20,6 +20,8 @@
 
 package genepi.io.table.reader;
 
+import java.io.IOException;
+
 public interface ITableReader extends Iterable<Row>{
 
 	public String[] getColumns();
@@ -30,7 +32,7 @@ public interface ITableReader extends Iterable<Row>{
 
 	public double getDouble(int column);
 
-	public String getString(String column);
+	public String getString(String column) throws IOException;
 
 	public int getInteger(String column);
 
@@ -45,5 +47,7 @@ public interface ITableReader extends Iterable<Row>{
 	public Row getAsObject();
 
 	public void close();
+
+	boolean hasColumn(String column);
 
 }
