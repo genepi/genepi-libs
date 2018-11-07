@@ -31,7 +31,7 @@ public abstract class AbstractTableReader implements ITableReader {
 		if (hasColumn(column)) {
 			return getInteger(getColumnIndex(column));
 		} else {
-			throw new ColumnNotFoundException("Column " + column + " not available");
+			throw new ColumnNotFoundException("Column '" + column + "' not available");
 		}
 	}
 
@@ -40,7 +40,7 @@ public abstract class AbstractTableReader implements ITableReader {
 		if (hasColumn(column)) {
 			return getString(getColumnIndex(column));
 		} else {
-			throw new ColumnNotFoundException("Column " + column + " not available");
+			throw new ColumnNotFoundException("Column '" + column + "' not available");
 		}
 	}
 
@@ -49,7 +49,7 @@ public abstract class AbstractTableReader implements ITableReader {
 		if (hasColumn(column)) {
 			return getDouble(getColumnIndex(column));
 		} else {
-			throw new ColumnNotFoundException("Column " + column + " not available");
+			throw new ColumnNotFoundException("Column '" + column + "' not available");
 		}
 	}
 
