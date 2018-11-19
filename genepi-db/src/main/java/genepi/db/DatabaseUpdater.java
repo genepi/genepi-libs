@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class DatabaseUpdater {
 
-	protected static final Log log = LogFactory.getLog(DatabaseUpdater.class);
+	protected static final Log log = LogFactory.getLog(DatabaseUpdaterTest.class);
 
 	private DatabaseConnector connector;
 
@@ -50,8 +50,8 @@ public class DatabaseUpdater {
 
 	private boolean needUpdate = false;
 
-	public DatabaseUpdater(DatabaseConnector connector, String filename,
-			InputStream updateFileStram, String currentVersion) {
+	public DatabaseUpdater(DatabaseConnector connector, String filename, InputStream updateFileStram,
+			String currentVersion) {
 
 		this.connector = connector;
 		this.filename = filename;
@@ -70,15 +70,13 @@ public class DatabaseUpdater {
 
 			try {
 
-				log.info("Updating database from " + oldVersion + " to "
-						+ currentVersion + "....");
+				log.info("Updating database from " + oldVersion + " to " + currentVersion + "....");
 
 				executeSQLClasspath(updateFileStram, oldVersion, currentVersion);
 
 				log.info("Updating database successful.");
 
-				FileUtil.writeStringBufferToFile(filename, new StringBuffer(
-						currentVersion));
+				FileUtil.writeStringBufferToFile(filename, new StringBuffer(currentVersion));
 
 			} catch (SQLException e) {
 
@@ -131,8 +129,7 @@ public class DatabaseUpdater {
 
 	}
 
-	public static String readFileAsString(String filename)
-			throws java.io.IOException, URISyntaxException {
+	public static String readFileAsString(String filename) throws java.io.IOException, URISyntaxException {
 
 		InputStream is = new FileInputStream(filename);
 
@@ -150,12 +147,10 @@ public class DatabaseUpdater {
 		return builder.toString();
 	}
 
-	public void executeSQLFile(String filename, String minVersion,
-			String maxVersion) throws SQLException, IOException,
-			URISyntaxException {
+	public void executeSQLFile(String filename, String minVersion, String maxVersion)
+			throws SQLException, IOException, URISyntaxException {
 
-		String sqlContent = readFileAsStringFile(filename, minVersion,
-				maxVersion);
+		String sqlContent = readFileAsStringFile(filename, minVersion, maxVersion);
 
 		Connection connection = connector.getDataSource().getConnection();
 
@@ -164,9 +159,8 @@ public class DatabaseUpdater {
 		connection.close();
 	}
 
-	public static String readFileAsStringFile(String filename,
-			String minVersion, String maxVersion) throws java.io.IOException,
-			URISyntaxException {
+	public static String readFileAsStringFile(String filename, String minVersion, String maxVersion)
+			throws java.io.IOException, URISyntaxException {
 
 		InputStream is = new FileInputStream(filename);
 
@@ -180,8 +174,7 @@ public class DatabaseUpdater {
 			if (strLine.startsWith("--")) {
 
 				String version = strLine.replace("--", "").trim();
-				reading = (compareVersion(version, minVersion) > 0 && compareVersion(
-						version, maxVersion) <= 0);
+				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
 				if (reading) {
 					log.info("Loading update for version " + version);
 				}
@@ -199,12 +192,10 @@ public class DatabaseUpdater {
 		return builder.toString();
 	}
 
-	public void executeSQLClasspath(InputStream is, String minVersion,
-			String maxVersion) throws SQLException, IOException,
-			URISyntaxException {
+	public void executeSQLClasspath(InputStream is, String minVersion, String maxVersion)
+			throws SQLException, IOException, URISyntaxException {
 
-		String sqlContent = readFileAsStringClasspath(is, minVersion,
-				maxVersion);
+		String sqlContent = readFileAsStringClasspath(is, minVersion, maxVersion);
 
 		if (!sqlContent.isEmpty()) {
 			Connection connection = connector.getDataSource().getConnection();
@@ -214,9 +205,8 @@ public class DatabaseUpdater {
 		}
 	}
 
-	public static String readFileAsStringClasspath(InputStream is,
-			String minVersion, String maxVersion) throws java.io.IOException,
-			URISyntaxException {
+	public static String readFileAsStringClasspath(InputStream is, String minVersion, String maxVersion)
+			throws java.io.IOException, URISyntaxException {
 
 		DataInputStream in = new DataInputStream(is);
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -228,8 +218,7 @@ public class DatabaseUpdater {
 			if (strLine.startsWith("--")) {
 
 				String version = strLine.replace("--", "");
-				reading = (compareVersion(version, minVersion) > 0 && compareVersion(
-						version, maxVersion) <= 0);
+				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
 
 				if (reading) {
 					log.info("Loading update for version " + version);
@@ -250,8 +239,11 @@ public class DatabaseUpdater {
 
 	public static int compareVersion(String version1, String version2) {
 
-		String tiles1[] = version1.split("\\.");
-		String tiles2[] = version2.split("\\.");
+		String parts1[] = version1.split("-", 2);
+		String parts2[] = version2.split("-", 2);
+
+		String tiles1[] = parts1[0].split("\\.");
+		String tiles2[] = parts2[0].split("\\.");
 
 		for (int i = 0; i < tiles1.length; i++) {
 			int number1 = Integer.parseInt(tiles1[i].trim());
@@ -263,6 +255,18 @@ public class DatabaseUpdater {
 
 			}
 
+		}
+
+		if (parts1.length > 1) {
+			if (parts2.length > 1) {
+				return parts1[1].compareTo(parts2[1]);
+			} else {
+				return -1;
+			}
+		}else {
+			if (parts2.length > 1) {
+				return 1;
+			}
 		}
 
 		return 0;
