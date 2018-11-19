@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class DatabaseUpdater {
 
-	protected static final Log log = LogFactory.getLog(DatabaseUpdaterTest.class);
+	protected static final Log log = LogFactory.getLog(DatabaseUpdater.class);
 
 	private DatabaseConnector connector;
 
