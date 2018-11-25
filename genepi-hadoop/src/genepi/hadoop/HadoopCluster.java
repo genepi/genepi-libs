@@ -70,40 +70,45 @@ public class HadoopCluster {
 
 		String confFolder = HadoopCluster.getConf();
 
-		if (confFolder == null) {
-			throw new Exception("Please define a cluster in file settings.yaml.");
-		}
+		if (confFolder != null) {
 
-		if (new File(confFolder).exists()) {
-			String configName = "mapred-site.xml";
-			String configFile = confFolder + "/" + configName;
-			if (!new File(configFile).exists()) {
-				throw new Exception("No '" + configName + "' file found in configuration folder '" + confFolder + "'.");
+			if (new File(confFolder).exists()) {
+				String configName = "mapred-site.xml";
+				String configFile = confFolder + "/" + configName;
+				if (!new File(configFile).exists()) {
+					throw new Exception(
+							"No '" + configName + "' file found in configuration folder '" + confFolder + "'.");
+				}
+			} else {
+				throw new Exception("Configuration folder '" + confFolder + "' not found.");
 			}
-		} else {
-			throw new Exception("Configuration folder '" + confFolder + "' not found.");
 		}
-
-		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
-		if (cluster.getActiveTrackerNames().isEmpty()) {
-			throw new Exception("No active nodes founds.");
-		}
-		Configuration configuration = HdfsUtil.getConfiguration();
-		FileSystem fileSystem = FileSystem.get(configuration);
 
 		try {
-			Path path = fileSystem.getHomeDirectory();
 
-			if (fileSystem.exists(path)) {
-				return true;
-			} else {
-				throw new Exception(
-						"Home directory '" + path + "' for user " + HadoopCluster.getUsername() + " not found.");
+			ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
+			if (cluster.getActiveTrackerNames().isEmpty()) {
+				throw new Exception("No active nodes founds.");
 			}
+			Configuration configuration = HdfsUtil.getConfiguration();
+			FileSystem fileSystem = FileSystem.get(configuration);
 
-		} catch (Exception e) {
-			throw new Exception(
-					"Problems find the home directory for user " + HadoopCluster.getUsername() + ". " + e.getMessage());
+			try {
+				Path path = fileSystem.getHomeDirectory();
+
+				if (fileSystem.exists(path)) {
+					return true;
+				} else {
+					throw new Exception(
+							"Home directory '" + path + "' for user " + HadoopCluster.getUsername() + " not found.");
+				}
+
+			} catch (Exception e) {
+				throw new Exception("Problems find the home directory for user " + HadoopCluster.getUsername() + ". "
+						+ e.getMessage());
+			}
+		} catch (java.lang.NoClassDefFoundError e) {
+			throw new Exception("No hadoop libraries found in classpath.");
 		}
 	}
 
