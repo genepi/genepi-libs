@@ -10,7 +10,6 @@ import org.apache.hadoop.mapred.ClusterStatus;
 
 import genepi.hadoop.HadoopUtil;
 import genepi.hadoop.HdfsUtil;
-import genepi.io.FileUtil;
 
 public class HadoopCluster {
 
@@ -31,12 +30,16 @@ public class HadoopCluster {
 			Configuration configuration = new Configuration();
 			// add all xml files from hadoop conf folder to default
 			// configuration
-			String[] xmlFiles = FileUtil.getFiles(path, "*.xml");
-			for (String xmlFile : xmlFiles) {
-				configuration.addResource(new Path(xmlFile));
+			File file = new File(path);
+			File[] files = file.listFiles();
+			for (File configFile : files) {
+				if (configFile.getName().endsWith(".xml")) {
+					configuration.addResource(new Path(configFile.getAbsolutePath()));
+				}
 			}
 
 			HdfsUtil.setDefaultConfiguration(configuration);
+
 		}
 
 	}
@@ -73,7 +76,7 @@ public class HadoopCluster {
 
 		if (new File(confFolder).exists()) {
 			String configName = "mapred-site.xml";
-			String configFile = FileUtil.path(confFolder, configName);
+			String configFile = confFolder + "/" + configName;
 			if (!new File(configFile).exists()) {
 				throw new Exception("No '" + configName + "' file found in configuration folder '" + confFolder + "'.");
 			}
@@ -103,28 +106,28 @@ public class HadoopCluster {
 					"Problems find the home directory for user " + HadoopCluster.getUsername() + ". " + e.getMessage());
 		}
 	}
-	
-	public static String getJobTrackerStatus(){
+
+	public static String getJobTrackerStatus() {
 		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
 		return cluster.getJobTrackerStatus().toString();
 	}
-	
-	public static int getMaxMapTasks(){
+
+	public static int getMaxMapTasks() {
 		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
 		return cluster.getMaxMapTasks();
 	}
 
-	public static int getMaxReduceTasks(){
+	public static int getMaxReduceTasks() {
 		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
 		return cluster.getMaxReduceTasks();
 	}
 
-	public static Collection<String> getActiveTrackerNames(){
+	public static Collection<String> getActiveTrackerNames() {
 		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
 		return cluster.getActiveTrackerNames();
 	}
-	
-	public static Collection<String> getBlacklistedTrackerNames(){
+
+	public static Collection<String> getBlacklistedTrackerNames() {
 		ClusterStatus cluster = HadoopUtil.getInstance().getClusterDetails();
 		return cluster.getBlacklistedTrackerNames();
 	}
