@@ -72,7 +72,7 @@ public class CsvTableReader extends AbstractTableReader {
 
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i].trim(), i);
+					columns2Index.put(header[i].toLowerCase().trim(), i);
 				}
 			}
 		} catch (IOException e) {
@@ -111,12 +111,12 @@ public class CsvTableReader extends AbstractTableReader {
 
 	@Override
 	public int getColumnIndex(String column) {
-		return columns2Index.get(column.trim());
+		return columns2Index.get(column.toLowerCase().trim());
 	}
 	
 	@Override
 	public boolean hasColumn(String column) {
-		return columns2Index.containsKey(column.trim());
+		return columns2Index.containsKey(column.toLowerCase().trim());
 	}
 
 	@Override

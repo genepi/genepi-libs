@@ -40,7 +40,7 @@ public class ExcelTableReader extends AbstractTableReader {
 			header = new String[columnCount];
 			for (int i = 0; i < columnCount; i++) {
 				header[i] = sheet.getCell(i, 0).getContents().trim();
-				columns2Index.put(header[i], i);
+				columns2Index.put(header[i].toLowerCase(), i);
 			}
 			currentRow = 0;
 		} catch (BiffException e) {
@@ -52,12 +52,12 @@ public class ExcelTableReader extends AbstractTableReader {
 
 	@Override
 	public int getColumnIndex(String column) {
-		return columns2Index.get(column.trim());
+		return columns2Index.get(column.toLowerCase().trim());
 	}
 
 	@Override
 	public boolean hasColumn(String column) {
-		return columns2Index.containsKey(column.trim());
+		return columns2Index.containsKey(column.toLowerCase().trim());
 	}
 
 	@Override
