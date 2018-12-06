@@ -33,7 +33,7 @@ public class CsvTableReader extends AbstractTableReader {
 			}
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i].trim(), i);
+					columns2Index.put(header[i].toLowerCase().trim(), i);
 				}
 			}
 		} catch (IOException e) {
@@ -53,7 +53,7 @@ public class CsvTableReader extends AbstractTableReader {
 			//}
 			if (header != null) {
 				for (int i = 0; i < header.length; i++) {
-					columns2Index.put(header[i].trim(), i);
+					columns2Index.put(header[i].toLowerCase().trim(), i);
 				}
 			}
 		} catch (IOException e) {
