@@ -102,7 +102,7 @@ public class CsvTableReader extends AbstractTableReader {
 			header = newHeader;
 
 			for (int i = 0; i < header.length; i++) {
-				columns2Index.put(header[i].trim(), i);
+				columns2Index.put(header[i].toLowerCase().trim(), i);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
