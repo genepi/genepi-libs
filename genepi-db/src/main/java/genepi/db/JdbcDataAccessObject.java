@@ -98,21 +98,29 @@ public abstract class JdbcDataAccessObject {
 	}
 
 	public int insert(String sql, Object[] params) throws SQLException {
+
 		Connection connection = database.getDataSource().getConnection();
-		PreparedStatement statement = connection.prepareStatement(sql,
-				PreparedStatement.RETURN_GENERATED_KEYS);
 
-		runner.fillStatement(statement, params);
+		try {
+			PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
-		statement.executeUpdate();
+			runner.fillStatement(statement, params);
 
-		ResultSet rs = statement.getGeneratedKeys();
-		rs.beforeFirst();
-		rs.next();
-		int id = rs.getInt(1);
-		connection.close();
-		return id;
+			statement.executeUpdate();
+
+			ResultSet rs = statement.getGeneratedKeys();
+			rs.beforeFirst();
+			rs.next();
+			int id = rs.getInt(1);
+			connection.close();
+			return id;
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			connection.close();
+		}
 	}
+
 
 	public int[] batch(String sql, Object[][] params) throws SQLException {
 
@@ -139,17 +147,26 @@ public abstract class JdbcDataAccessObject {
 		return runner.insertBatch(sql, handler, params);
 	}
 
-	public boolean callProcedure(String sql, Object[] params)
-			throws SQLException {
-		Connection connection = database.getDataSource().getConnection();
+	public boolean callProcedure(String sql, Object[] params) throws SQLException {
 
-		CallableStatement cstmt = connection.prepareCall(sql);
-		runner.fillStatement(cstmt, params);
-		boolean state = cstmt.execute();
-		cstmt.close();
-		connection.close();
-		return state;
+		Connection connection = null;
+		
+		try {
+			connection = database.getDataSource().getConnection();
+
+			CallableStatement cstmt = connection.prepareCall(sql);
+			runner.fillStatement(cstmt, params);
+			boolean state = cstmt.execute();
+			cstmt.close();
+			connection.close();
+			return state;
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			connection.close();
+		}
 	}
+
 
 	public static class IntegerMapper implements IRowMapper {
 
