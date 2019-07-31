@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsStatus;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -28,7 +29,7 @@ public class HadoopUtil {
 
 	private static final org.apache.commons.logging.Log log = LogFactory
 			.getLog(HadoopUtil.class);
-
+	
 	public static HadoopUtil getInstance() {
 		if (instance == null) {
 			instance = new HadoopUtil();
@@ -38,6 +39,7 @@ public class HadoopUtil {
 
 	private HadoopUtil() {
 		try {
+			System.out.println("Init HadoopUtil " + HdfsUtil.getConfiguration().get("mapred.job.tracker"));
 			client = new JobClient(HdfsUtil.getConfiguration());
 		} catch (IOException e) {
 			log.error("JobClient init failed.", e);

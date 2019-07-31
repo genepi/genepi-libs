@@ -7,7 +7,7 @@ public class ImporterFactory {
 
 	public static boolean needsImport(String url) {
 		return url.startsWith("sftp://") || url.startsWith("http://") || url.startsWith("https://")
-				|| url.startsWith("ftp://");
+				|| url.startsWith("ftp://") || url.startsWith("s3://");
 	}
 
 	public static IImporter createImporter(String url, String target) {
@@ -19,9 +19,17 @@ public class ImporterFactory {
 				return new LocalImporterSftp(url, target);
 			}
 		}
+		
+		if (url.startsWith("s3://")) {
+			if (target != null && target.startsWith("hdfs://")) {
+				return new HdfsImporterS3(url, target);
+			} else {
+				return new LocalImporterS3(url, target);
+			}
+		}
 
 		if (url.startsWith("http://") || url.startsWith("https://")) {
-			if (target !=null && target.startsWith("hdfs://")) {
+			if (target != null && target.startsWith("hdfs://")) {
 				return new HdfsImporterHttp(url, target);
 			} else {
 				return new LocalImporterHttp(url, target);
