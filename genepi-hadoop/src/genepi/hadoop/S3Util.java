@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -62,6 +61,8 @@ public class S3Util {
 			String bucket = getBucket(url);
 			String key = getKey(url);
 			copyToFile(bucket, key, file);
+		} else {
+			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
 		}
 	}
 
@@ -82,21 +83,56 @@ public class S3Util {
 
 	}
 
+	public static void copyToS3(File file, String url) throws IOException {
+		if (isValidS3Url(url)) {
+			String bucket = getBucket(url);
+			String key = getKey(url);
+			copyToS3(file, bucket, key);
+		} else {
+			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
+		}
+	}
+	
+	public static void copyToS3(String content, String url) throws IOException {
+		if (isValidS3Url(url)) {
+			String bucket = getBucket(url);
+			String key = getKey(url);
+			copyToS3(content, bucket, key);
+		} else {
+			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
+		}
+	}
+	
+	public static void copyToS3(File file, String bucket, String key)  throws IOException {
+		
+		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		s3.putObject(bucket, key, file);
+
+	}
+	
+	public static void copyToS3(String content, String bucket, String key)  throws IOException {
+		
+		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		s3.putObject(bucket, key, content);
+
+	}
+	
 	public static ObjectListing listObjects(String url) throws IOException {
 
 		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
 
 		if (isValidS3Url(url)) {
-			
+
 			String bucket = getBucket(url);
 			String key = getKey(url);
 
 			ObjectListing objects = s3.listObjects(bucket, key);
-			
+
 			return objects;
+		} else {
+			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
 		}
 
-		return null;
 	}
 
 }
