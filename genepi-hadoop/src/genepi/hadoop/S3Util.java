@@ -9,6 +9,9 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
 
 public class S3Util {
 
@@ -92,7 +95,7 @@ public class S3Util {
 			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
 		}
 	}
-	
+
 	public static void copyToS3(String content, String url) throws IOException {
 		if (isValidS3Url(url)) {
 			String bucket = getBucket(url);
@@ -102,21 +105,27 @@ public class S3Util {
 			throw new IOException("Url '" + url + "' is not a valid S3 bucket.");
 		}
 	}
-	
-	public static void copyToS3(File file, String bucket, String key)  throws IOException {
-		
+
+	public static void copyToS3(File file, String bucket, String key) throws IOException {
+
 		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-		s3.putObject(bucket, key, file);
+		TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		Upload upload = tm.upload(bucket, key, file);
+		try {
+			upload.waitForCompletion();
+		} catch (InterruptedException e) {
+			throw new IOException(e);
+		}
 
 	}
-	
-	public static void copyToS3(String content, String bucket, String key)  throws IOException {
-		
+
+	public static void copyToS3(String content, String bucket, String key) throws IOException {
+
 		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
 		s3.putObject(bucket, key, content);
 
 	}
-	
+
 	public static ObjectListing listObjects(String url) throws IOException {
 
 		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
