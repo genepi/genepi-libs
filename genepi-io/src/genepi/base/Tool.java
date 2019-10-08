@@ -128,6 +128,10 @@ public abstract class Tool {
 		}
 
 	}
+	
+	public String[] getRemainingArgs() {
+		return line.getArgs();
+	}
 
 	public boolean isFlagSet(String param) {
 
