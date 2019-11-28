@@ -31,17 +31,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 public class MySqlConnector implements DatabaseConnector {
 
-	private static final Log log = LogFactory.getLog(MySqlConnector.class); 
+	private static final Log log = LogFactory.getLog(MySqlConnector.class);
 
 	private BasicDataSource dataSource;
 
@@ -51,8 +48,7 @@ public class MySqlConnector implements DatabaseConnector {
 	private String user;
 	private String password;
 
-	public MySqlConnector(String host, String port, String database,
-			String user, String password) {
+	public MySqlConnector(String host, String port, String database, String user, String password) {
 		this.host = host;
 		this.port = port;
 		this.database = database;
@@ -63,26 +59,21 @@ public class MySqlConnector implements DatabaseConnector {
 	@Override
 	public void connect() throws SQLException {
 
-		log.debug("Establishing connection to " + user + "@" + host + ":"
-				+ port);
+		log.debug("Establishing connection to " + user + "@" + host + ":" + port);
 
 		if (DbUtils.loadDriver("com.mysql.jdbc.Driver")) {
 			try {
 				dataSource = new BasicDataSource();
 
 				dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-				dataSource
-						.setUrl("jdbc:mysql://"
-								+ host
-								+ "/"
-								+ database
-								+ "?autoReconnect=true&allowMultiQueries=true&rewriteBatchedStatements=true");
+				dataSource.setUrl("jdbc:mysql://" + host + "/" + database
+						+ "?autoReconnect=true&allowMultiQueries=true&rewriteBatchedStatements=true");
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
 				dataSource.setMaxActive(10);
 				dataSource.setMaxWait(10000);
 				dataSource.setMaxIdle(10);
-				dataSource.setDefaultAutoCommit(true); 
+				dataSource.setDefaultAutoCommit(true);
 				dataSource.setTestWhileIdle(true);
 				dataSource.setMinEvictableIdleTimeMillis(1800000);
 				dataSource.setTimeBetweenEvictionRunsMillis(1800000);
@@ -105,23 +96,21 @@ public class MySqlConnector implements DatabaseConnector {
 
 	@Override
 	public BasicDataSource getDataSource() {
-			return dataSource;
+		return dataSource;
 	}
 
-	public void executeSQL(InputStream is) throws SQLException, IOException,
-			URISyntaxException {
+	public void executeSQL(InputStream is) throws SQLException, IOException, URISyntaxException {
 
 		String sqlContent = readFileAsString(is);
 		if (!sqlContent.isEmpty()) {
 			Connection connection = dataSource.getConnection();
-			PreparedStatement ps =connection.prepareStatement(sqlContent);
+			PreparedStatement ps = connection.prepareStatement(sqlContent);
 			ps.executeUpdate();
-			connection.close();			
+			connection.close();
 		}
 	}
 
-	public static String readFileAsString(InputStream is)
-			throws java.io.IOException, URISyntaxException {
+	public static String readFileAsString(InputStream is) throws java.io.IOException, URISyntaxException {
 
 		DataInputStream in = new DataInputStream(is);
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -134,14 +123,14 @@ public class MySqlConnector implements DatabaseConnector {
 
 		in.close();
 
-		return builder.toString(); 
+		return builder.toString();
 	}
 
 	@Override
 	public String getSchema() {
 		return database;
 	}
- 
+
 	@Override
 	public boolean existsTable(String table) throws SQLException {
 		Connection connection = dataSource.getConnection();
@@ -155,5 +144,5 @@ public class MySqlConnector implements DatabaseConnector {
 		}
 		return exists;
 	}
-	
+
 }
