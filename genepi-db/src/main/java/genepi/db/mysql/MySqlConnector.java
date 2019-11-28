@@ -82,7 +82,10 @@ public class MySqlConnector implements DatabaseConnector {
 				dataSource.setMaxActive(10);
 				dataSource.setMaxWait(10000);
 				dataSource.setMaxIdle(10);
-				dataSource.setDefaultAutoCommit(true);
+				dataSource.setDefaultAutoCommit(true); 
+				dataSource.setTestWhileIdle(true);
+				dataSource.setMinEvictableIdleTimeMillis(1800000);
+				dataSource.setTimeBetweenEvictionRunsMillis(1800000);
 
 			} catch (Exception e) {
 				e.printStackTrace();
