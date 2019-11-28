@@ -70,7 +70,7 @@ public class DatabaseUpdater {
 			// exists
 			if (oldVersion == null) {
 				oldVersion = readVersion(filename);
-				log.info("Read curent version from DB not successful, read it from file: " + oldVersion);
+				log.info("Read curent version from DB was not successful, read it from file: " + oldVersion);
 			}
 
 		} else {
@@ -78,9 +78,40 @@ public class DatabaseUpdater {
 			oldVersion = readVersion(filename);
 			log.info("Read current version from file: " + oldVersion);
 		}
-		log.info("Current Main version: " + currentVersion);
+		log.info("Current app version: " + currentVersion);
 		needUpdate = (compareVersion(currentVersion, oldVersion) > 0);
 
+	}
+	
+	public boolean updateDB() {
+
+		if (needUpdate()) {
+			log.info("Database needs update...");
+			if (!update()) {
+				log.error("Updating database failed.");
+				try {
+					database.disconnect();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return false;
+			}
+			log.info("Update database done.");
+		} else {
+			log.info("Database is already up-to-date.");
+			if (!isVersionTableAvailable(database)) {
+				writeVersion(currentVersion);
+			}
+		} 
+
+		String dbVersion = readVersionDB();
+		if (!dbVersion.equals(currentVersion)) {
+			log.error("App version (v" +  currentVersion + ") and DB version (v" +  dbVersion + ") does not match. Update Application to latest version.");
+			return false;
+		}
+		
+		return true;
 	}
 
 	public boolean update() {
@@ -101,7 +132,7 @@ public class DatabaseUpdater {
 				writeVersion(currentVersion);
 			}
 
-			log.info("Updating database successful.");
+			log.info("Updating database was successful.");
 
 		}
 
