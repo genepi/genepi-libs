@@ -26,8 +26,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.DbUtils;
@@ -37,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class MySqlConnector implements DatabaseConnector {
 
-	private static final Log log = LogFactory.getLog(MySqlConnector.class);
+	private static final Log log = LogFactory.getLog(MySqlConnector.class); 
 
 	private BasicDataSource dataSource;
 
@@ -127,12 +131,26 @@ public class MySqlConnector implements DatabaseConnector {
 
 		in.close();
 
-		return builder.toString();
+		return builder.toString(); 
 	}
 
 	@Override
-	public boolean isNewDatabase() throws SQLException {
-		return false;
+	public String getSchema() {
+		return database;
 	}
-
+ 
+	@Override
+	public boolean existsTable(String table) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		DatabaseMetaData meta = connection.getMetaData();
+		ResultSet res = meta.getTables(null, null, table, new String[] { "TABLE" });
+		boolean exists = res.next();
+		res.close();
+		connection.close();
+		if (!exists) {
+			log.warn("Table '" + table + "' not found'");
+		}
+		return exists;
+	}
+	
 }

@@ -121,5 +121,9 @@ public class Database {
 			URISyntaxException {
 		connector.executeSQL(is);
 	}
-
+	
+	public DatabaseConnector getConnector() {
+		return connector;
+	} 
+	
 }

@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.logging.Log;
@@ -40,60 +41,67 @@ public class DatabaseUpdater {
 
 	private DatabaseConnector connector;
 
+	private Database database;
+
 	private String oldVersion;
 
 	private String currentVersion;
 
 	private String filename;
 
-	private InputStream updateFileStram;
+	private InputStream updateFileAsStream;
 
 	private boolean needUpdate = false;
 
-	public DatabaseUpdater(DatabaseConnector connector, String filename, InputStream updateFileStram,
-			String currentVersion) {
+	public DatabaseUpdater(Database database, String filename, InputStream updateFileAsStream, String currentVersion) {
 
-		this.connector = connector;
 		this.filename = filename;
-		this.updateFileStram = updateFileStram;
+		this.database = database;
+		this.connector = database.getConnector();
+		this.updateFileAsStream = updateFileAsStream;
 		this.currentVersion = currentVersion;
 
-		oldVersion = readVersion(filename);
+		if (isVersionTableAvailable(database)) {
 
+			oldVersion = readVersionDB();
+			log.info("Read current DB version: " + oldVersion);
+
+			// should not happen, since an entry is created when metadata table
+			// exists
+			if (oldVersion == null) {
+				oldVersion = readVersion(filename);
+				log.info("Read curent version from DB not successful, read it from file: " + oldVersion);
+			}
+
+		} else {
+			// check also file for backwards compatibility
+			oldVersion = readVersion(filename);
+			log.info("Read current version from file: " + oldVersion);
+		}
+		log.info("Current Main version: " + currentVersion);
 		needUpdate = (compareVersion(currentVersion, oldVersion) > 0);
 
 	}
 
 	public boolean update() {
-
 		if (needUpdate) {
+			
+			log.info("Updating database from " + oldVersion + " to " + currentVersion + "...");
 
 			try {
-
-				log.info("Updating database from " + oldVersion + " to " + currentVersion + "....");
-
-				executeSQLClasspath(updateFileStram, oldVersion, currentVersion);
-
-				log.info("Updating database successful.");
-
-				FileUtil.writeStringBufferToFile(filename, new StringBuffer(currentVersion));
-
-			} catch (SQLException e) {
-
-				log.error("Updating database failed.", e);
-				return false;
-
-			} catch (IOException e) {
-
-				log.error("Updating database failed.", e);
-				return false;
-
-			} catch (URISyntaxException e) {
-
-				log.error("Updating database failed.", e);
-				return false;
-
+				readAndPrepareSqlClasspath(updateFileAsStream, oldVersion, currentVersion);
+			} catch (IOException | URISyntaxException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace(); 
 			}
+
+			// check if DB version match with Main version
+			String currentDBVersion = readVersionDB();
+			if ((compareVersion(currentVersion, currentDBVersion) > 0)) {
+				writeVersion(currentVersion);
+			}
+
+			log.info("Updating database successful.");
 
 		}
 
@@ -103,6 +111,33 @@ public class DatabaseUpdater {
 
 	public boolean needUpdate() {
 		return needUpdate;
+	}
+
+	public void writeVersion(String newVersion) {
+
+		try {
+
+			if (!isVersionTableAvailable(database)) {
+				createVersionTable(database);
+			}
+
+			Connection connection = connector.getDataSource().getConnection();
+			PreparedStatement ps = connection.prepareStatement("INSERT INTO database_versions (version) VALUES (?)");
+			ps.setString(1, newVersion);
+			ps.executeUpdate();
+			log.info("Version in DB updated to: " + newVersion);
+
+			if (new File(filename).exists()) {
+				FileUtil.deleteFile(filename);
+				log.info("Deleted version.txt on file system.");
+			}
+
+			connection.close();
+
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	}
 
 	public String readVersion(String versionFile) {
@@ -117,16 +152,40 @@ public class DatabaseUpdater {
 
 			} catch (Exception e) {
 
-				return "1.0.0";
+				return "0.0.0";
 
 			}
 
 		} else {
 
-			return "1.0.0";
+			return "0.0.0";
 
 		}
 
+	}
+
+	public String readVersionDB() {
+
+		String version = null;
+
+		try {
+			Connection connection = connector.getDataSource().getConnection();
+			PreparedStatement ps = connection.prepareStatement(
+					"select version from database_versions where updated_on = (SELECT MAX(updated_on) from database_versions) "
+							+ "order by updated_on, id DESC");
+			ResultSet result = ps.executeQuery();
+
+			if (result.next()) {
+				version = result.getString(1);
+			}
+
+			connection.close();
+
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return version;
 	}
 
 	public static String readFileAsString(String filename) throws java.io.IOException, URISyntaxException {
@@ -159,6 +218,104 @@ public class DatabaseUpdater {
 		connection.close();
 	}
 
+	public String readAndPrepareSQL(String filename, String minVersion, String maxVersion)
+			throws java.io.IOException, URISyntaxException, SQLException {
+
+		InputStream is = new FileInputStream(filename);
+
+		DataInputStream in = new DataInputStream(is);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		String strLine;
+		StringBuilder builder = new StringBuilder();
+		boolean reading = false;
+		String version = null;
+		while ((strLine = br.readLine()) != null) {
+
+			if (strLine.startsWith("--")) {
+
+				if (builder.length() > 0) {
+					executeSQLFile(builder.toString(), version);
+					builder.setLength(0);
+				}
+
+				version = strLine.replace("--", "").trim();
+				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
+				if (reading) {
+					log.info("Loading update for version " + version);
+				}
+
+			}
+
+			if (reading) {
+				builder.append("\n");
+				builder.append(strLine);
+			}
+		}
+
+		// last block
+		executeSQLFile(builder.toString(), version);
+
+		in.close();
+
+		return builder.toString();
+	}
+
+	public String readAndPrepareSqlClasspath(InputStream filestream, String minVersion, String maxVersion)
+			throws java.io.IOException, URISyntaxException, SQLException {
+
+		DataInputStream in = new DataInputStream(filestream);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		String strLine;
+		StringBuilder builder = new StringBuilder();
+		boolean reading = false;
+		String version = null;
+
+		while ((strLine = br.readLine()) != null) {
+
+			if (strLine.startsWith("--")) {
+
+				if (builder.length() > 0) {
+					executeSQLFile(builder.toString(), version);
+					builder.setLength(0);
+				}
+
+				version = strLine.replace("--", "").trim();
+				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
+				if (reading) {
+					log.info("Loading SQL update for version " + version);
+				}
+
+			}
+
+			if (reading) {
+				builder.append("\n");
+				builder.append(strLine);
+			}
+		}
+
+		// last block
+		executeSQLFile(builder.toString(), version);
+
+		in.close();
+
+		return builder.toString();
+
+	}
+
+	public void executeSQLFile(String sqlContent, String version) throws SQLException {
+
+		if (sqlContent.length() > 0) {
+			Connection connection;
+			connection = connector.getDataSource().getConnection();
+			PreparedStatement ps = connection.prepareStatement(sqlContent);
+			ps.executeUpdate();
+			connection.close();
+			log.info("DB SQL Update " + version + " finished");
+			writeVersion(version);
+		}
+
+	}
+
 	public static String readFileAsStringFile(String filename, String minVersion, String maxVersion)
 			throws java.io.IOException, URISyntaxException {
 
@@ -167,6 +324,7 @@ public class DatabaseUpdater {
 		DataInputStream in = new DataInputStream(is);
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		String strLine;
+
 		StringBuilder builder = new StringBuilder();
 		boolean reading = false;
 		while ((strLine = br.readLine()) != null) {
@@ -198,6 +356,7 @@ public class DatabaseUpdater {
 		String sqlContent = readFileAsStringClasspath(is, minVersion, maxVersion);
 
 		if (!sqlContent.isEmpty()) {
+
 			Connection connection = connector.getDataSource().getConnection();
 			PreparedStatement ps = connection.prepareStatement(sqlContent);
 			ps.executeUpdate();
@@ -263,7 +422,7 @@ public class DatabaseUpdater {
 			} else {
 				return -1;
 			}
-		}else {
+		} else {
 			if (parts2.length > 1) {
 				return 1;
 			}
@@ -271,6 +430,33 @@ public class DatabaseUpdater {
 
 		return 0;
 
+	}
+
+	public boolean isVersionTableAvailable(Database database) {
+		try {
+			return database.getConnector().existsTable("database_versions");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void createVersionTable(Database database) {
+		try {
+			Connection connection = connector.getDataSource().getConnection();
+			String statement = "create table database_versions ( \r\n"
+					+ "	id          integer not null auto_increment primary key,\r\n"
+					+ "	version	varchar(255) not null,\r\n"
+					+ "    updated_on timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP \r\n" + ")";
+			PreparedStatement ps = connection.prepareStatement(statement);
+			ps.executeUpdate();
+			connection.close();
+			log.info("Table database_versions created.");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

@@ -28,7 +28,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -46,7 +48,6 @@ public class H2Connector implements DatabaseConnector {
 	private String user;
 	private String password;
 	private boolean multiuser = false;
-	private boolean exists = false;
 
 	public H2Connector(String path, String user, String password, boolean multiuser) {
 		this.path = path;
@@ -73,12 +74,8 @@ public class H2Connector implements DatabaseConnector {
 		return true;
 
 	}
-
+	
 	public void connect() throws SQLException {
-
-		File file = new File(path + ".h2.db");
-		File file2 = new File(path + ".mv.db");
-		exists = file.exists() || file2.exists();
 
 		log.debug("Establishing connection to " + user + "@" + path);
 
@@ -94,9 +91,9 @@ public class H2Connector implements DatabaseConnector {
 				} else {
 					newPath = path;
 				}
-
+ 
 				if (multiuser) {
-					dataSource.setUrl("jdbc:h2:" + newPath + ";AUTO_SERVER=TRUE");
+					dataSource.setUrl("jdbc:h2:" + newPath + ";AUTO_SERVER=TRUE;");
 				} else {
 					dataSource.setUrl("jdbc:h2:" + newPath);
 				}
@@ -120,10 +117,6 @@ public class H2Connector implements DatabaseConnector {
 	public void disconnect() throws SQLException {
 		dataSource.close();
 
-	}
-
-	public boolean isNewDatabase() {
-		return !exists;
 	}
 
 	public void executeSQL(InputStream is) throws SQLException, IOException, URISyntaxException {
@@ -156,4 +149,28 @@ public class H2Connector implements DatabaseConnector {
 	public BasicDataSource getDataSource() {
 		return dataSource;
 	}
+
+	@Override
+	public String getSchema() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean existsTable(String table) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		DatabaseMetaData meta = connection.getMetaData();
+		ResultSet res = meta.getTables(null, null, table.toUpperCase(), new String[] { "TABLE" });
+		boolean exists = res.next();
+		res.close();
+		connection.close();
+		if (!exists) {
+			log.warn("Table '" + table + "' not found'");
+		}
+		return exists;
+	}
+
+
+
+	
 }

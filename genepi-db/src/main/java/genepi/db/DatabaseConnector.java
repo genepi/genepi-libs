@@ -20,7 +20,12 @@ package genepi.db;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
@@ -30,10 +35,13 @@ public interface DatabaseConnector {
 
 	public void disconnect() throws SQLException;
 
-	public boolean isNewDatabase() throws SQLException;
-
 	public BasicDataSource getDataSource();
 
 	public void executeSQL(InputStream is) throws SQLException, IOException,
 			URISyntaxException;
+
+	public String getSchema();
+
+	boolean existsTable(String table) throws SQLException;
 }
+
