@@ -127,8 +127,12 @@ public class DatabaseUpdater {
 			}
 
 			// check if DB version match with Main version
-			String currentDBVersion = readVersionDB();
-			if ((compareVersion(currentVersion, currentDBVersion) > 0)) {
+			if (isVersionTableAvailable(database)) {
+				String currentDBVersion = readVersionDB();
+				if ((compareVersion(currentVersion, currentDBVersion) > 0)) {
+					writeVersion(currentVersion);
+				}
+			}else {
 				writeVersion(currentVersion);
 			}
 
