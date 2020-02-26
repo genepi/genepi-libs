@@ -6,11 +6,31 @@ import java.io.IOException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 
 public class S3Util {
+
+	private static AmazonS3 s3;
+
+	private static TransferManager tm;
+
+	public static AmazonS3 getAmazonS3() {
+		if (s3 == null) {
+			s3 = AmazonS3ClientBuilder.defaultClient();
+		}
+		return s3;
+	}
+
+	public static TransferManager getTransferManager() {
+		if (tm == null) {
+			s3 = getAmazonS3();
+			tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		}
+		return tm;
+	}
 
 	public static boolean isValidS3Url(String url) {
 		if (url.startsWith("s3://")) {
@@ -68,10 +88,14 @@ public class S3Util {
 
 	public static void copyToFile(String bucket, String key, File file) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-		TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();
-		tm.download(bucket, key, file);
-		
+		TransferManager tm = getTransferManager();
+		Download download = tm.download(bucket, key, file);
+		try {
+			download.waitForCompletion();
+		} catch (InterruptedException e) {
+			throw new IOException(e);
+		}
+
 	}
 
 	public static void copyToS3(File file, String url) throws IOException {
@@ -96,8 +120,7 @@ public class S3Util {
 
 	public static void copyToS3(File file, String bucket, String key) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-		TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		TransferManager tm = getTransferManager();
 		Upload upload = tm.upload(bucket, key, file);
 		try {
 			upload.waitForCompletion();
@@ -109,14 +132,14 @@ public class S3Util {
 
 	public static void copyToS3(String content, String bucket, String key) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		AmazonS3 s3 = getAmazonS3();
 		s3.putObject(bucket, key, content);
 
 	}
 
 	public static ObjectListing listObjects(String url) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		AmazonS3 s3 = getAmazonS3();
 
 		if (isValidS3Url(url)) {
 
