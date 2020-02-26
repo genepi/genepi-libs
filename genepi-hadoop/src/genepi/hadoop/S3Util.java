@@ -1,14 +1,11 @@
 package genepi.hadoop;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
@@ -72,18 +69,9 @@ public class S3Util {
 	public static void copyToFile(String bucket, String key, File file) throws IOException {
 
 		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-
-		S3Object o = s3.getObject(bucket, key);
-		S3ObjectInputStream s3is = o.getObjectContent();
-		FileOutputStream fos = new FileOutputStream(file);
-		byte[] read_buf = new byte[1024];
-		int read_len = 0;
-		while ((read_len = s3is.read(read_buf)) > 0) {
-			fos.write(read_buf, 0, read_len);
-		}
-		s3is.close();
-		fos.close();
-
+		TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		tm.download(bucket, key, file);
+		
 	}
 
 	public static void copyToS3(File file, String url) throws IOException {
