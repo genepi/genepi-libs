@@ -1,19 +1,36 @@
 package genepi.hadoop;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 
 public class S3Util {
+
+	private static AmazonS3 s3;
+
+	private static TransferManager tm;
+
+	public static AmazonS3 getAmazonS3() {
+		if (s3 == null) {
+			s3 = AmazonS3ClientBuilder.defaultClient();
+		}
+		return s3;
+	}
+
+	public static TransferManager getTransferManager() {
+		if (tm == null) {
+			s3 = getAmazonS3();
+			tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		}
+		return tm;
+	}
 
 	public static boolean isValidS3Url(String url) {
 		if (url.startsWith("s3://")) {
@@ -71,18 +88,13 @@ public class S3Util {
 
 	public static void copyToFile(String bucket, String key, File file) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-
-		S3Object o = s3.getObject(bucket, key);
-		S3ObjectInputStream s3is = o.getObjectContent();
-		FileOutputStream fos = new FileOutputStream(file);
-		byte[] read_buf = new byte[1024];
-		int read_len = 0;
-		while ((read_len = s3is.read(read_buf)) > 0) {
-			fos.write(read_buf, 0, read_len);
+		TransferManager tm = getTransferManager();
+		Download download = tm.download(bucket, key, file);
+		try {
+			download.waitForCompletion();
+		} catch (InterruptedException e) {
+			throw new IOException(e);
 		}
-		s3is.close();
-		fos.close();
 
 	}
 
@@ -108,8 +120,7 @@ public class S3Util {
 
 	public static void copyToS3(File file, String bucket, String key) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-		TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();
+		TransferManager tm = getTransferManager();
 		Upload upload = tm.upload(bucket, key, file);
 		try {
 			upload.waitForCompletion();
@@ -121,14 +132,14 @@ public class S3Util {
 
 	public static void copyToS3(String content, String bucket, String key) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		AmazonS3 s3 = getAmazonS3();
 		s3.putObject(bucket, key, content);
 
 	}
 
 	public static ObjectListing listObjects(String url) throws IOException {
 
-		final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+		AmazonS3 s3 = getAmazonS3();
 
 		if (isValidS3Url(url)) {
 
