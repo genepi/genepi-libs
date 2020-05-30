@@ -31,6 +31,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +54,8 @@ public class DatabaseUpdater {
 	private InputStream updateFileAsStream;
 
 	private boolean needUpdate = false;
+
+	private Map<String, IUpdateListener> listeners = new HashMap<String, IUpdateListener>();
 
 	public DatabaseUpdater(Database database, String filename, InputStream updateFileAsStream, String currentVersion) {
 
@@ -82,7 +86,11 @@ public class DatabaseUpdater {
 		needUpdate = (compareVersion(currentVersion, oldVersion) > 0);
 
 	}
-	
+
+	public void addUpdate(String version, IUpdateListener listener) {
+		listeners.put(version, listener);
+	}
+
 	public boolean updateDB() {
 
 		if (needUpdate()) {
@@ -103,27 +111,28 @@ public class DatabaseUpdater {
 			if (!isVersionTableAvailable(database)) {
 				writeVersion(currentVersion);
 			}
-		} 
+		}
 
 		String dbVersion = readVersionDB();
 		if (!dbVersion.equals(currentVersion)) {
-			log.error("App version (v" +  currentVersion + ") and DB version (v" +  dbVersion + ") does not match. Update Application to latest version.");
+			log.error("App version (v" + currentVersion + ") and DB version (v" + dbVersion
+					+ ") does not match. Update Application to latest version.");
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	public boolean update() {
 		if (needUpdate) {
-			
+
 			log.info("Updating database from " + oldVersion + " to " + currentVersion + "...");
 
 			try {
 				readAndPrepareSqlClasspath(updateFileAsStream, oldVersion, currentVersion);
 			} catch (IOException | URISyntaxException | SQLException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace(); 
+				e.printStackTrace();
 			}
 
 			// check if DB version match with Main version
@@ -132,7 +141,7 @@ public class DatabaseUpdater {
 				if ((compareVersion(currentVersion, currentDBVersion) > 0)) {
 					writeVersion(currentVersion);
 				}
-			}else {
+			} else {
 				writeVersion(currentVersion);
 			}
 
@@ -241,60 +250,6 @@ public class DatabaseUpdater {
 		return builder.toString();
 	}
 
-	public void executeSQLFile(String filename, String minVersion, String maxVersion)
-			throws SQLException, IOException, URISyntaxException {
-
-		String sqlContent = readFileAsStringFile(filename, minVersion, maxVersion);
-
-		Connection connection = connector.getDataSource().getConnection();
-
-		PreparedStatement ps = connection.prepareStatement(sqlContent);
-		ps.executeUpdate();
-		connection.close();
-	}
-
-	public String readAndPrepareSQL(String filename, String minVersion, String maxVersion)
-			throws java.io.IOException, URISyntaxException, SQLException {
-
-		InputStream is = new FileInputStream(filename);
-
-		DataInputStream in = new DataInputStream(is);
-		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		String strLine;
-		StringBuilder builder = new StringBuilder();
-		boolean reading = false;
-		String version = null;
-		while ((strLine = br.readLine()) != null) {
-
-			if (strLine.startsWith("--")) {
-
-				if (builder.length() > 0) {
-					executeSQLFile(builder.toString(), version);
-					builder.setLength(0);
-				}
-
-				version = strLine.replace("--", "").trim();
-				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
-				if (reading) {
-					log.info("Loading update for version " + version);
-				}
-
-			}
-
-			if (reading) {
-				builder.append("\n");
-				builder.append(strLine);
-			}
-		}
-
-		// last block
-		executeSQLFile(builder.toString(), version);
-
-		in.close();
-
-		return builder.toString();
-	}
-
 	public String readAndPrepareSqlClasspath(InputStream filestream, String minVersion, String maxVersion)
 			throws java.io.IOException, URISyntaxException, SQLException {
 
@@ -312,12 +267,20 @@ public class DatabaseUpdater {
 				if (builder.length() > 0) {
 					executeSQLFile(builder.toString(), version);
 					builder.setLength(0);
+					IUpdateListener listener = listeners.get(version);
+					if (listener != null) {
+						listener.afterUpdate(database);
+					}
 				}
 
 				version = strLine.replace("--", "").trim();
 				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
 				if (reading) {
 					log.info("Loading SQL update for version " + version);
+					IUpdateListener listener = listeners.get(version);
+					if (listener != null) {
+						listener.beforeUpdate(database);
+					}
 				}
 
 			}
@@ -349,86 +312,6 @@ public class DatabaseUpdater {
 			writeVersion(version);
 		}
 
-	}
-
-	public static String readFileAsStringFile(String filename, String minVersion, String maxVersion)
-			throws java.io.IOException, URISyntaxException {
-
-		InputStream is = new FileInputStream(filename);
-
-		DataInputStream in = new DataInputStream(is);
-		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		String strLine;
-
-		StringBuilder builder = new StringBuilder();
-		boolean reading = false;
-		while ((strLine = br.readLine()) != null) {
-
-			if (strLine.startsWith("--")) {
-
-				String version = strLine.replace("--", "").trim();
-				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
-				if (reading) {
-					log.info("Loading update for version " + version);
-				}
-
-			}
-
-			if (reading) {
-				builder.append("\n");
-				builder.append(strLine);
-			}
-		}
-
-		in.close();
-
-		return builder.toString();
-	}
-
-	public void executeSQLClasspath(InputStream is, String minVersion, String maxVersion)
-			throws SQLException, IOException, URISyntaxException {
-
-		String sqlContent = readFileAsStringClasspath(is, minVersion, maxVersion);
-
-		if (!sqlContent.isEmpty()) {
-
-			Connection connection = connector.getDataSource().getConnection();
-			PreparedStatement ps = connection.prepareStatement(sqlContent);
-			ps.executeUpdate();
-			connection.close();
-		}
-	}
-
-	public static String readFileAsStringClasspath(InputStream is, String minVersion, String maxVersion)
-			throws java.io.IOException, URISyntaxException {
-
-		DataInputStream in = new DataInputStream(is);
-		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		String strLine;
-		StringBuilder builder = new StringBuilder();
-		boolean reading = false;
-		while ((strLine = br.readLine()) != null) {
-
-			if (strLine.startsWith("--")) {
-
-				String version = strLine.replace("--", "");
-				reading = (compareVersion(version, minVersion) > 0 && compareVersion(version, maxVersion) <= 0);
-
-				if (reading) {
-					log.info("Loading update for version " + version);
-				}
-
-			}
-
-			if (reading) {
-				builder.append("\n");
-				builder.append(strLine);
-			}
-		}
-
-		in.close();
-
-		return builder.toString();
 	}
 
 	public static int compareVersion(String version1, String version2) {
