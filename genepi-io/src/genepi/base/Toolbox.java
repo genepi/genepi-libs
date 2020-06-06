@@ -63,7 +63,7 @@ public class Toolbox {
 
 	}
 
-	private void help() {
+	protected void help() {
 		System.out.println("\nusage: " + command + " <tool> <params>\n");
 
 		System.out.println("Available Tools:");
