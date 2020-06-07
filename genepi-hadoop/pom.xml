@@ -20,20 +20,21 @@
 		</license>
 	</licenses>
 
+	<distributionManagement>
+		<repository>
+			<id>bintray-genepi-maven</id>
+			<name>genepi-maven</name>
+			<url>https://api.bintray.com/maven/genepi/maven/genepi-hadoop/;publish=1</url>
+		</repository>
+	</distributionManagement>
+
+
 	<repositories>
 		<repository>
 			<id>cloudera</id>
 			<url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
 		</repository>
 	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>genepi-maven</id>
-			<name>genepi-maven</name>
-			<url>https://api.bintray.com/maven/genepi/maven/genepi-hadoop/;publish=1</url>
-		</repository>
-	</distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
