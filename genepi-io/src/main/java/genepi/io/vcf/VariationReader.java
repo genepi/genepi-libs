@@ -1,13 +1,13 @@
 package genepi.io.vcf;
 
-import genepi.io.table.reader.IReader;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
+
+import genepi.io.reader.IReader;
 
 public class VariationReader implements IReader<Variation> {
 

@@ -1,8 +1,8 @@
-package genepi.io.text;
+package genepi.io.reader;
 
 import java.io.IOException;
 
-public interface ITextReader<o> extends Iterable<o> {
+public interface IReader<o> extends Iterable<o> {
 
 	public boolean next() throws IOException;
 
