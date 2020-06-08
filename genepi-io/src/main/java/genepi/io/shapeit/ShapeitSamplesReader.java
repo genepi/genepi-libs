@@ -1,7 +1,7 @@
 package genepi.io.shapeit;
 
 import genepi.io.FileUtil;
-import genepi.io.table.reader.IReader;
+import genepi.io.reader.IReader;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

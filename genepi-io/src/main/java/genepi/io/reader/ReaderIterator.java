@@ -1,14 +1,13 @@
-package genepi.io.text;
-
+package genepi.io.reader;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class TextReaderIterator<o> implements Iterator<o> {
+public class ReaderIterator<o> implements Iterator<o> {
 
-	private ITextReader<o> reader;
+	private IReader<o> reader;
 
-	public TextReaderIterator(ITextReader<o> reader) {
+	public ReaderIterator(IReader<o> reader) {
 		this.reader = reader;
 	}
 
