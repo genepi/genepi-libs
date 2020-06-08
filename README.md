@@ -11,8 +11,11 @@ This repository is the home of all of our libraries which are used in many of ou
 </repository>
 ```
 
-## genepi-io [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-io/images/download.svg) ](https://bintray.com/genepi/maven/genepi-io/_latestVersion)
- 
+## genepi-io
+
+[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-io/images/download.svg) ](https://bintray.com/genepi/maven/genepi-io/_latestVersion)
+![build genepi-io](https://github.com/genepi/genepi-libs/workflows/build%20genepi-io/badge.svg)
+
 Processing genomic file formats (e.g. vcf, csv, plink, bed, etc.)
 
 ```
@@ -24,7 +27,9 @@ Processing genomic file formats (e.g. vcf, csv, plink, bed, etc.)
 </dependency>
 ```
 
-## genepi-hadoop [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-hadoop/images/download.svg) ](https://bintray.com/genepi/maven/genepi-hadoop/_latestVersion)
+## genepi-hadoop
+
+[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-hadoop/images/download.svg) ](https://bintray.com/genepi/maven/genepi-hadoop/_latestVersion)
  
 Communicating with a Cloudera Hadoop Cluster (mrv1 & yarn) 
 
@@ -37,7 +42,9 @@ Communicating with a Cloudera Hadoop Cluster (mrv1 & yarn)
 </dependency>
 ```
 
-## genepi-db [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-db/images/download.svg) ](https://bintray.com/genepi/maven/genepi-db/_latestVersion)
+## genepi-db
+
+[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-db/images/download.svg) ](https://bintray.com/genepi/maven/genepi-db/_latestVersion)
 Communicating with relational databases (mysql, h2)
  
  ```
