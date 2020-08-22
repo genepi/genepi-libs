@@ -1,9 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>genepi</groupId>
 	<artifactId>genepi-io</artifactId>
 	<version>1.0.12</version>
+
+	<name>genepi-io</name>
+	<description>A small java library to simplify working with files.</description>
+
 	<properties>
 		<jdk.version>1.7</jdk.version>
 	</properties>
@@ -15,6 +20,12 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+	<scm>
+		<url>https://github.com/genepi/genepi-libs/tree/master</url>
+		<connection>scm:git:https://github.com/genepi/genepi-libs.git</connection>
+		<developerConnection>scm:git:ssh://github.com:genepi/genepi-libs.git</developerConnection>
+	</scm>
 
 	<distributionManagement>
 		<repository>

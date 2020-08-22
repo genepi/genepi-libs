@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -7,6 +8,7 @@
 	<version>1.2.0</version>
 
 	<name>genepi-db</name>
+	<description>A small java library to simplify working with databases.</description>
 
 	<properties>
 		<github.global.server>github</github.global.server>
@@ -20,6 +22,12 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
+	<scm>
+		<url>https://github.com/genepi/genepi-libs/tree/master</url>
+		<connection>scm:git:https://github.com/genepi/genepi-libs.git</connection>
+		<developerConnection>scm:git:ssh://github.com:genepi/genepi-libs.git</developerConnection>
+	</scm>
 
 	<distributionManagement>
 		<repository>
@@ -47,12 +55,9 @@
 
 	<repositories>
 		<repository>
-			<id>genepi-libs</id>
-			<url>https://raw.github.com/genepi/maven-repository/mvn-repo/</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
+			<id>bintray-genepi-maven</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/genepi/maven</url>
 		</repository>
 	</repositories>
 

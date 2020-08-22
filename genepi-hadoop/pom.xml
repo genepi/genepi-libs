@@ -6,6 +6,14 @@
 	<artifactId>genepi-hadoop</artifactId>
 	<version>mr1-1.4.1</version>
 
+	<name>genepi-hadoop</name>
+	<description>A small java library to simplify writing Hadoop jobs.</description>
+
+	<scm>
+		<url>https://github.com/genepi/genepi-libs/tree/master</url>
+		<connection>scm:git:https://github.com/genepi/genepi-libs.git</connection>
+		<developerConnection>scm:git:ssh://github.com:genepi/genepi-libs.git</developerConnection>
+	</scm>
 
 	<properties>
 		<github.global.server>github</github.global.server>
