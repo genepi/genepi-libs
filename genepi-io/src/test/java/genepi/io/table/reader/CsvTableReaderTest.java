@@ -4,15 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.junit.Test;
 
-import genepi.io.FileUtil;
 import genepi.io.table.exceptions.ColumnNotFoundException;
 
 public class CsvTableReaderTest {
@@ -93,11 +89,7 @@ public class CsvTableReaderTest {
 	@Test
 	public void testLoadWithGzStream() throws FileNotFoundException, IOException {
 
-		InputStream stream = FileUtil.decompressStream(new FileInputStream("test-data/testLoad.csv.gz"));
-		DataInputStream inputStream = new DataInputStream(stream);
-		ITableReader reader = new CsvTableReader(inputStream, ',');
-
-		assertEquals(null, reader.toString());
+		ITableReader reader = new CsvTableReader("test-data/testLoad.csv.gz", ',');
 
 		assertEquals(5, reader.getColumns().length);
 		assertEquals(0, reader.getColumnIndex("COL1"));
