@@ -93,9 +93,9 @@ public class H2Connector implements DatabaseConnector {
 				}
  
 				if (multiuser) {
-					dataSource.setUrl("jdbc:h2:" + newPath + ";AUTO_SERVER=TRUE;");
+					dataSource.setUrl("jdbc:h2:" + newPath + ";AUTO_SERVER=TRUE;MODE=MySQL");
 				} else {
-					dataSource.setUrl("jdbc:h2:" + newPath);
+					dataSource.setUrl("jdbc:h2:" + newPath + ";MODE=MySQL");
 				}
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
