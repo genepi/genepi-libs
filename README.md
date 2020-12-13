@@ -16,7 +16,7 @@ This repository is the home of all of our libraries which are used in many of ou
 [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-io/images/download.svg) ](https://bintray.com/genepi/maven/genepi-io/_latestVersion)
 ![build genepi-io](https://github.com/genepi/genepi-libs/workflows/build%20genepi-io/badge.svg)
 
-Processing genomic file formats (e.g. vcf, csv, plink, bed, etc.)
+A small java library to simplify working with files.
 
 ```
 <dependency>
@@ -30,8 +30,9 @@ Processing genomic file formats (e.g. vcf, csv, plink, bed, etc.)
 ## genepi-hadoop
 
 [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-hadoop/images/download.svg) ](https://bintray.com/genepi/maven/genepi-hadoop/_latestVersion)
- 
-Communicating with a Cloudera Hadoop Cluster (mrv1 & yarn) 
+![build genepi-hadoop](https://github.com/genepi/genepi-libs/workflows/build%20genepi-hadoop/badge.svg)
+
+A small java library to simplify writing Hadoop jobs.
 
 ```
 <dependency>
@@ -45,7 +46,9 @@ Communicating with a Cloudera Hadoop Cluster (mrv1 & yarn)
 ## genepi-db
 
 [ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-db/images/download.svg) ](https://bintray.com/genepi/maven/genepi-db/_latestVersion)
-Communicating with relational databases (mysql, h2)
+![build genepi-db](https://github.com/genepi/genepi-libs/workflows/build%20genepi-db/badge.svg)
+
+A small java library to simplify working with databases (e.g. mysql or h2)
  
  ```
  <dependency>
