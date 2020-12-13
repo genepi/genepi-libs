@@ -5,7 +5,7 @@
 
 	<groupId>genepi</groupId>
 	<artifactId>genepi-db</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 
 	<name>genepi-db</name>
 	<description>A small java library to simplify working with databases.</description>
