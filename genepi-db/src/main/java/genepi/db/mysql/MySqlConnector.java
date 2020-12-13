@@ -17,8 +17,6 @@
 
 package genepi.db.mysql;
 
-import genepi.db.DatabaseConnector;
-
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -36,7 +34,9 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class MySqlConnector implements DatabaseConnector {
+import genepi.db.AbstractDatabaseConnector;
+
+public class MySqlConnector extends AbstractDatabaseConnector {
 
 	private static final Log log = LogFactory.getLog(MySqlConnector.class);
 
@@ -63,20 +63,13 @@ public class MySqlConnector implements DatabaseConnector {
 
 		if (DbUtils.loadDriver("com.mysql.jdbc.Driver")) {
 			try {
-				dataSource = new BasicDataSource();
+				dataSource = createDataSource();
 
 				dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 				dataSource.setUrl("jdbc:mysql://" + host + "/" + database
 						+ "?autoReconnect=true&allowMultiQueries=true&rewriteBatchedStatements=true");
 				dataSource.setUsername(user);
 				dataSource.setPassword(password);
-				dataSource.setMaxActive(10);
-				dataSource.setMaxWait(10000);
-				dataSource.setMaxIdle(10);
-				dataSource.setDefaultAutoCommit(true);
-				dataSource.setTestWhileIdle(true);
-				dataSource.setMinEvictableIdleTimeMillis(1800000);
-				dataSource.setTimeBetweenEvictionRunsMillis(1800000);
 
 			} catch (Exception e) {
 				e.printStackTrace();
