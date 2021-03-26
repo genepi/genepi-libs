@@ -54,8 +54,8 @@ public class LineReaderTest {
 			tmp = reader.get();
 		}
 
-		assertEquals(8, count);
-		assertEquals(1, countDuplicates);
+		assertEquals(7, count);
+		assertEquals(0, countDuplicates);
 
 		reader.close();
 

@@ -34,21 +34,19 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 
 	@Override
 	public boolean next() throws IOException {
-		line = in.readLine();
 
-		
-		if (line != null) {
+		while ((line = in.readLine()) != null) {
 			try {
 				lineNumber++;
 				if (!line.trim().isEmpty()) {
 					parseLine(line);
+					return true;
 				}
 			} catch (Exception e) {
-				throw new IOException(filename + ": Line " + lineNumber + ": "
-						+ e.getMessage());
+				throw new IOException(filename + ": Line " + lineNumber + ": " + e.getMessage());
 			}
 		}
-		return line != null;
+		return false;
 	}
 
 	protected abstract void parseLine(String line) throws Exception;
@@ -74,7 +72,5 @@ public abstract class AbstractLineReader<o> implements IReader<o> {
 	public String getFilename() {
 		return filename;
 	}
-	
-
 
 }
