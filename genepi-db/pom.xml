@@ -31,9 +31,9 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bintray-genepi-maven</id>
-			<name>genepi-maven</name>
-			<url>https://api.bintray.com/maven/genepi/maven/genepi-db/;publish=1</url>
+			<id>jfrog-genepi-maven</id>
+			<name>jfrog-genepi-maven</name>
+			<url>https://genepi.jfrog.io/artifactory/maven/</url>
 		</repository>
 	</distributionManagement>
 
@@ -55,9 +55,9 @@
 
 	<repositories>
 		<repository>
-			<id>bintray-genepi-maven</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/genepi/maven</url>
+			<id>jfrog-genepi-maven</id>
+			<name>jfrog-genepi-maven</name>
+			<url>https://genepi.jfrog.io/artifactory/maven/</url>
 		</repository>
 	</repositories>
 
