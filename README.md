@@ -15,7 +15,6 @@ This repository is the home of all of our libraries which are used in many of ou
 
 ## genepi-io
 
-[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-io/images/download.svg) ](https://bintray.com/genepi/maven/genepi-io/_latestVersion)
 ![build genepi-io](https://github.com/genepi/genepi-libs/workflows/build%20genepi-io/badge.svg)
 
 A small java library to simplify working with files.
@@ -31,7 +30,6 @@ A small java library to simplify working with files.
 
 ## genepi-hadoop
 
-[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-hadoop/images/download.svg) ](https://bintray.com/genepi/maven/genepi-hadoop/_latestVersion)
 ![build genepi-hadoop](https://github.com/genepi/genepi-libs/workflows/build%20genepi-hadoop/badge.svg)
 
 A small java library to simplify writing Hadoop jobs.
@@ -47,7 +45,6 @@ A small java library to simplify writing Hadoop jobs.
 
 ## genepi-db
 
-[ ![Download](https://api.bintray.com/packages/genepi/maven/genepi-db/images/download.svg) ](https://bintray.com/genepi/maven/genepi-db/_latestVersion)
 ![build genepi-db](https://github.com/genepi/genepi-libs/workflows/build%20genepi-db/badge.svg)
 
 A small java library to simplify working with databases (e.g. mysql or h2)
