@@ -4,11 +4,13 @@ genepi-libs
 This repository is the home of all of our libraries which are used in many of our scientific projects. All artifacts are located in our [maven-repository](https://bintray.com/genepi/maven). To use this repository, add the following configuration to your `pom.xml` file or gradle script:
 
 ```
-<repository>
-    <id>bintray-genepi-maven</id>
-    <name>bintray</name>
-    <url>https://dl.bintray.com/genepi/maven</url>
-</repository>
+<repositories>
+	<repository>
+		<id>jfrog-genepi-maven</id>
+		<name>jfrog-genepi-maven</name>
+		<url>https://genepi.jfrog.io/artifactory/maven/</url>
+	</repository>
+</repositories>
 ```
 
 ## genepi-io
