@@ -2,13 +2,13 @@ package genepi.io.table.reader;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -24,45 +24,64 @@ public class XlsxTableReader extends AbstractTableReader {
 
 	private Map<String, Integer> columns2Index = new HashMap<String, Integer>();
 
+	private String[] header;
+
 	private String[] currentLine;
 
-	public XlsxTableReader(String filename) throws IOException {
+	private String filename;
+	
+	private DataFormatter formatter = new DataFormatter(Locale.ENGLISH);
+
+	public XlsxTableReader(String filename) {
 		this(filename, null);
 	}
 
-	public XlsxTableReader(String filename, String sheetName) throws IOException {
-		file = new FileInputStream(new File(filename));
+	public XlsxTableReader(String filename, String sheetName) {
+		this.filename = filename;
+		try {
+			file = new FileInputStream(new File(filename));
+			workbook = new XSSFWorkbook(file);
 
-		workbook = new XSSFWorkbook(file);
+			if (sheetName != null) {
+				sheet = workbook.getSheet(sheetName);
+			} else {
+				sheet = workbook.getSheetAt(0);
+			}
 
-		if (sheetName != null) {
-			sheet = workbook.getSheet(sheetName);
-		} else {
-			sheet = workbook.getSheetAt(0);
-		}
+			// Iterate through each rows one by one
+			rowIterator = sheet.iterator();
+			if (!rowIterator.hasNext()) {
+				throw new RuntimeException("No header found");
+			}
+			org.apache.poi.ss.usermodel.Row row = rowIterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
 
-		// Iterate through each rows one by one
-		rowIterator = sheet.iterator();
-		if (!rowIterator.hasNext()) {
-			throw new IOException("No header found");
-		}
-		org.apache.poi.ss.usermodel.Row row = rowIterator.next();
-		Iterator<Cell> cellIterator = row.cellIterator();
+			int i = 0;
+			while (cellIterator.hasNext()) {
+				Cell cell = cellIterator.next();
+				String value = cell.getStringCellValue();
+				columns2Index.put(value.toLowerCase(), i);
+				i++;
+			}
 
-		int i = 0;
-		while (cellIterator.hasNext()) {
-			Cell cell = cellIterator.next();
-			String value = cell.getStringCellValue();
-			columns2Index.put(value.toLowerCase(), i);
-			i++;
+			cellIterator = row.cellIterator();
+			header = new String[columns2Index.size()];
+			i = 0;
+			while (cellIterator.hasNext()) {
+				Cell cell = cellIterator.next();
+				String value = cell.getStringCellValue();
+				header[i] = value;
+				i++;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 
 	}
 
 	@Override
 	public String[] getColumns() {
-		// TODO Auto-generated method stub
-		return null;
+		return header;
 	}
 
 	@Override
@@ -79,14 +98,7 @@ public class XlsxTableReader extends AbstractTableReader {
 			String value = "";
 			Cell cell = row.getCell(i);
 			if (cell != null) {
-				CellType type = cell.getCellType();
-				if (type == CellType.NUMERIC) {
-					value = "" + cell.getNumericCellValue();
-				} else if (type == CellType.BOOLEAN) {
-					value = "" + cell.getBooleanCellValue();
-				} else {
-					value = cell.getStringCellValue();
-				}
+				value = formatter.formatCellValue(cell);
 			}
 			currentLine[i] = value;
 		}
@@ -116,6 +128,11 @@ public class XlsxTableReader extends AbstractTableReader {
 	@Override
 	public String[] getRow() {
 		return currentLine;
+	}
+
+	@Override
+	public String toString() {
+		return filename;
 	}
 
 }
